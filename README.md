@@ -22,11 +22,11 @@ First you need to get a OAuth consumer key/secret from Bitbucket.
 3. Click **OAuth** from the menu bar.
 4. Press the **Add consumer** button.
 6. The system requests the following information:
- 6.1. Give a representative **name** to the consumer e.g. Jenkins build status notifier.
- 6.2. Although is not used, a **Callback URL** must be set e.g. ci.your-domain.com.
- 6.2. Leave blank the **URL** field.
- 6.3. Add **Read** and **Write** permissions to **Repositories**.
- 6.4. Click **Save** button and a **Key** and **Secret** will be automatically generated.
+ 1. Give a representative **name** to the consumer e.g. Jenkins build status notifier.
+ 2. Although is not used, a **Callback URL** must be set e.g. ci.your-domain.com.
+ 2. Leave blank the **URL** field.
+ 3. Add **Read** and **Write** permissions to **Repositories**.
+ 4. Click **Save** button and a **Key** and **Secret** will be automatically generated.
 
 Second, you need to configure Jenkins:
 
