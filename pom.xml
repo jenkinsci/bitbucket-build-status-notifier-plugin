@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -8,12 +7,12 @@
     <artifactId>plugin</artifactId>
     <!-- Baseline Jenkins version you use to build and test the plugin. Users must have this version or newer to run. -->
     <version>1.580.1</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>bitbucket-build-status-notifier</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>hpi</packaging>
 
   <name>Bitbucket build status notifier integration plugin</name>
@@ -38,6 +37,7 @@
     <connection>scm:git:git://github.com/jenkinsci/bitbucket-build-status-notifier-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/bitbucket-build-status-notifier-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/bitbucket-build-status-notifier-plugin</url>
+    <tag>1.0</tag>
   </scm>
 
   <repositories>
