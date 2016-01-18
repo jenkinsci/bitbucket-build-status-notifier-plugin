@@ -1,4 +1,4 @@
-# Bitbucket build status notifier plugin for Jenkins
+# Bitbucket build status notifier plugin for Jenkins - [![Build Status][jenkins-status]][jenkins-builds]
 
 Every time you trigger a build, you don't have to log in to your build server to see if it passed or failed. Now
 you will be able to know when your build is passing right within the Bitbucket UI.
@@ -60,3 +60,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[jenkins-builds]: https://jenkins.ci.cloudbees.com/job/plugins/job/bitbucket-build-status-notifier-plugin/
+[jenkins-status]: https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/bitbucket-build-status-notifier-plugin
