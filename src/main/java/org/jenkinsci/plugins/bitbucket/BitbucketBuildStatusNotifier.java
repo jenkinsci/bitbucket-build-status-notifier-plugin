@@ -237,7 +237,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         @Override
         public String getDisplayName() {
-            return "Bitbucket notify build status";
+            return "Set build status on Bitbucket commit";
         }
 
         public DescriptorImpl() {
