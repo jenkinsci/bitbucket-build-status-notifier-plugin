@@ -35,8 +35,9 @@ Second, you need to configure Jenkins:
 3. Go to the Job you want notifies the builds to Bitbucket.
 4. Click **Configure**.
 5. Click **Add post-build action**.
-6. Set the **Key** and **Secret** you previously created.
-7. Choose whether you want to notify the build status on Jenkins to Bitbucket.
+6. Select **Set build status on Bitbucket commit**.
+7. Set the **Key** and **Secret** you previously created.
+8. Choose whether you want to notify the build status on Jenkins to Bitbucket.
 
 ## Contributions
 
