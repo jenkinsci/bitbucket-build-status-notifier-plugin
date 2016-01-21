@@ -18,6 +18,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import org.eclipse.jgit.transport.RemoteConfig;
@@ -79,8 +80,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.notifyBuildStatus(buildStatusResource, buildStatus);
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.info("Bitbucket notify on start failed: " + e.getMessage());
+            logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
+            e.printStackTrace(listener.getLogger());
         }
 
         logger.info("Bitbucket notify on start succeeded");
@@ -102,8 +104,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.notifyBuildStatus(buildStatusResource, buildStatus);
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.info("Bitbucket notify on finish failed: " + e.getMessage());
+            logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
+            e.printStackTrace(listener.getLogger());
         }
 
         logger.info("Bitbucket notify on finish succeeded");
