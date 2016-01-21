@@ -23,4 +23,16 @@ public class BitbucketBuildStatusResource {
             throw new Exception("Verb " + verb.toString() + "not allowed or implemented");
         }
     }
+
+    public String getCommitId() {
+        return this.commitId;
+    }
+
+    public String getOwner() {
+        return this.owner;
+    }
+
+    public String getRepoSlug() {
+        return this.repoSlug;
+    }
 }

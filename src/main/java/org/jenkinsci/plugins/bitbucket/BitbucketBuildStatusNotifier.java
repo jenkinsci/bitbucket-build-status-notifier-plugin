@@ -8,9 +8,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
-import hudson.plugins.git.GitChangeSet;
-import hudson.plugins.git.GitChangeSetList;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -78,7 +77,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
             BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
             this.notifyBuildStatus(buildStatusResource, buildStatus);
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
+            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
@@ -102,7 +101,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
             BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
             this.notifyBuildStatus(buildStatusResource, buildStatus);
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
+            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
@@ -177,7 +176,6 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier could not extract the repository name from the repository URL");
         }
 
-        //
         String userName = repoUrl.substring(0, repoUrl.indexOf("/" + repoName));
         if (userName.indexOf("/") != -1) {
             userName = userName.substring(userName.indexOf("/") + 1, userName.length());
@@ -186,17 +184,16 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier could not extract the user name from the repository URL");
         }
 
-        //
-        if (build.getChangeSets().size() <= 0) {
-            throw new Exception("No change set to send to Bitbucket!");
+        // find current revision
+        BuildData buildData = build.getAction(BuildData.class);
+        if(buildData == null || buildData.getLastBuiltRevision() == null) {
+            throw new Exception("Revision could not be found");
         }
 
-        GitChangeSetList changeSets = (GitChangeSetList) build.getChangeSets().get(0);
-        List<GitChangeSet> gitChangeSet = changeSets.getLogs();
-        if (gitChangeSet.size() < 1) {
-            throw new Exception("No commits found on change set to send to Bitbucket!");
+        String commitId = buildData.getLastBuiltRevision().getSha1String();
+        if (commitId == null) {
+            throw new Exception("Commit ID could not be found!");
         }
-        String commitId = gitChangeSet.get(gitChangeSet.size() - 1).getCommitId();
 
         return new BitbucketBuildStatusResource(userName, repoName, commitId);
     }
