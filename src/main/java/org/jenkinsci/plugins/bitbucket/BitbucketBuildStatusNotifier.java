@@ -80,7 +80,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.notifyBuildStatus(buildStatusResource, buildStatus);
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.info(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
+            logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
             e.printStackTrace(listener.getLogger());
         }
@@ -104,7 +104,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.notifyBuildStatus(buildStatusResource, buildStatus);
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.info(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
+            logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
             e.printStackTrace(listener.getLogger());
         }
