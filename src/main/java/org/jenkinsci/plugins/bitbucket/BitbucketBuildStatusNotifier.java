@@ -77,7 +77,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
             BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
             this.notifyBuildStatus(buildStatusResource, buildStatus);
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
+            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
@@ -101,7 +101,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
             BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
             this.notifyBuildStatus(buildStatusResource, buildStatus);
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
+            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
