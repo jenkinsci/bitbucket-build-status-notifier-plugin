@@ -132,15 +132,18 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     private String guessBitbucketBuildState(final Result result) {
 
-        String state = null;
+        String state;
 
         // possible statuses SUCCESS, UNSTABLE, FAILURE, NOT_BUILT, ABORTED
         if (result == null) {
             state = BitbucketBuildStatus.INPROGRESS;
         } else if (Result.SUCCESS == result) {
             state = BitbucketBuildStatus.SUCCESSFUL;
-        } else if (Result.FAILURE == result) {
+        } else if (Result.UNSTABLE == result || Result.FAILURE == result) {
             state = BitbucketBuildStatus.FAILED;
+        } else {
+            // return empty status for every other result (NOT_BUILT, ABORTED)
+            state = null;
         }
 
         return state;
