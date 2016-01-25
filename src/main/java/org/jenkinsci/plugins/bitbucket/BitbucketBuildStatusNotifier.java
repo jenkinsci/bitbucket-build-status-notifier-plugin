@@ -4,11 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Build;
 import hudson.model.BuildListener;
+import hudson.model.Project;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
+import hudson.plugins.git.Revision;
 import hudson.plugins.git.util.BuildData;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -16,10 +20,14 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
+import java.util.Map;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
+import jenkins.triggers.SCMTriggerItem;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.bitbucket.api.*;
@@ -74,14 +82,15 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         logger.info("Bitbucket notify on start");
 
         try {
-            BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
+            List<BitbucketBuildStatusResource> buildStatusResourceList = this.createBuildStatusResourceListFromBuild(build);
             BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
-            this.notifyBuildStatus(buildStatusResource, buildStatus);
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
+            for (BitbucketBuildStatusResource buildStatusResource : buildStatusResourceList) {
+                this.notifyBuildStatus(buildStatusResource, buildStatus);
+            }
+            listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
+            logger.info("Bitbucket notify on start failed: " + e.getMessage());
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
-            e.printStackTrace(listener.getLogger());
         }
 
         logger.info("Bitbucket notify on start succeeded");
@@ -98,14 +107,14 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         logger.info("Bitbucket notify on finish");
 
         try {
-            BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
             BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
-            this.notifyBuildStatus(buildStatusResource, buildStatus);
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
+            for (BitbucketBuildStatusResource buildStatusResource : createBuildStatusResourceListFromBuild(build)) {            
+                this.notifyBuildStatus(buildStatusResource, buildStatus);
+            }
+            listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
+            logger.info("Bitbucket notify on finish failed: " + e.getMessage());
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
-            e.printStackTrace(listener.getLogger());
         }
 
         logger.info("Bitbucket notify on finish succeeded");
@@ -145,14 +154,72 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         return state;
     }
-
-    private BitbucketBuildStatusResource createBuildStatusResourceFromBuild(final AbstractBuild build) throws Exception {
-
+    
+    private List<BitbucketBuildStatusResource> createBuildStatusResourceListFromBuild(final AbstractBuild build) throws Exception {   
         SCM scm = build.getProject().getScm();
         if (scm == null) {
             throw new Exception("Bitbucket build notifier only works with SCM");
+        }        
+        
+        Map<String, String> buildRevisions = getBuildGitRevisions(build);        
+        List<BitbucketBuildStatusResource> resourceList = new ArrayList();
+        for (GitSCM gitSCM : getProjectGitSCMs(build.getProject())) {
+            resourceList.add(createBuildStatusResourceFromBuild(build, gitSCM, buildRevisions));
+        }
+        return resourceList;
+    }
+    
+    // Parse revisions from build    
+    public static Map<String, String> getBuildGitRevisions(AbstractBuild build) {
+        Map<String, String> buildRevisions = new HashMap();
+
+        List<BuildData> buildDataList = build.getActions(BuildData.class);
+        for (BuildData buildData : buildDataList) {
+            String url = null;
+            for (String remoteUrl : buildData.getRemoteUrls()) {
+                url = remoteUrl;
+                break;
+            }
+
+            if (url != null) { // Git repository has valid url
+                Revision lastBuiltRevision = buildData.getLastBuiltRevision();
+                if (lastBuiltRevision != null) {
+                    buildRevisions.put(url, lastBuiltRevision.getSha1String()); // get Git revision from last entry
+                } else {
+                    for (hudson.plugins.git.util.Build b : buildData.getBuildsByBranchName().values()) {
+                        buildRevisions.put(url, b.getSHA1().getName()); // get Git revision from the first entry
+                        break;
+                    }
+                }
+            }
         }
 
+        return buildRevisions;
+    }
+
+    // Filter Git SCM from project config
+    public static List<GitSCM> getProjectGitSCMs(AbstractProject project) {
+        List<GitSCM> gitSCMs = new ArrayList();
+        for (Object scm : getProjectSCMs(project)) {
+            if (scm instanceof GitSCM) { // filter Git only
+                gitSCMs.add((GitSCM) scm);
+            }
+        }
+        
+        return gitSCMs;
+    }
+
+    private static Collection getProjectSCMs(AbstractProject project) {
+        if (project instanceof MatrixProject) {
+            MatrixProject mp = (MatrixProject) project;
+            return SCMTriggerItem.SCMTriggerItems.resolveMultiScmIfConfigured(mp.getScm());
+        } else {
+            Project p = (Project) project;
+            return  p.getSCMs();
+        }
+    }
+
+    private BitbucketBuildStatusResource createBuildStatusResourceFromBuild(final AbstractBuild build, final GitSCM scm, final  Map<String, String> buildRevisions) throws Exception {
         if (!(scm instanceof GitSCM)) {
             throw new Exception("Bitbucket build notifier requires a git repo as SCM");
         }
@@ -176,26 +243,22 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier could not extract the repository name from the repository URL");
         }
 
+        //
         String userName = repoUrl.substring(0, repoUrl.indexOf("/" + repoName));
-        if (userName.indexOf("/") != -1) {
+        if (userName.contains("/")) {
             userName = userName.substring(userName.indexOf("/") + 1, userName.length());
         }
         if (userName.isEmpty()) {
             throw new Exception("Bitbucket build notifier could not extract the user name from the repository URL");
         }
-
-        // find current revision
-        BuildData buildData = build.getAction(BuildData.class);
-        if(buildData == null || buildData.getLastBuiltRevision() == null) {
-            throw new Exception("Revision could not be found");
+        
+        
+        String commitSha1 = buildRevisions.get(urIish.toString());
+        if (commitSha1 == null) {
+            throw new Exception("No commit found to send to Bitbucket!");            
         }
-
-        String commitId = buildData.getLastBuiltRevision().getSha1String();
-        if (commitId == null) {
-            throw new Exception("Commit ID could not be found!");
-        }
-
-        return new BitbucketBuildStatusResource(userName, repoName, commitId);
+        
+        return new BitbucketBuildStatusResource(userName, repoName, commitSha1);
     }
 
     private void notifyBuildStatus(final BitbucketBuildStatusResource buildStatusResource, final BitbucketBuildStatus buildStatus) throws Exception {
