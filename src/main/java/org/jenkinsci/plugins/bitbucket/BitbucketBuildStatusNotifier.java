@@ -7,7 +7,6 @@ import hudson.Launcher;
 import hudson.matrix.MatrixProject;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Build;
 import hudson.model.BuildListener;
 import hudson.model.Project;
 import hudson.model.Result;
@@ -25,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import jenkins.triggers.SCMTriggerItem;
@@ -42,10 +42,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     private static final Logger logger = Logger.getLogger(BitbucketBuildStatusNotifier.class.getName());
 
-    private String apiKey;
-    private String apiSecret;
-    private boolean notifyStart;
-    private boolean notifyFinish;
+    private final String apiKey;
+    private final String apiSecret;
+    private final boolean notifyStart;
+    private final boolean notifyFinish;
 
     @DataBoundConstructor
     public BitbucketBuildStatusNotifier(final String apiKey, final String apiSecret, final boolean notifyStart,
@@ -89,8 +89,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             }
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.info("Bitbucket notify on start failed: " + e.getMessage());
+            logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
+            e.printStackTrace(listener.getLogger());
         }
 
         logger.info("Bitbucket notify on start succeeded");
@@ -113,8 +114,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             }
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " to BitBucket is done!");
         } catch (Exception e) {
-            logger.info("Bitbucket notify on finish failed: " + e.getMessage());
+            logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
+            e.printStackTrace(listener.getLogger());
         }
 
         logger.info("Bitbucket notify on finish succeeded");
@@ -243,7 +245,6 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier could not extract the repository name from the repository URL");
         }
 
-        //
         String userName = repoUrl.substring(0, repoUrl.indexOf("/" + repoName));
         if (userName.contains("/")) {
             userName = userName.substring(userName.indexOf("/") + 1, userName.length());
@@ -251,14 +252,13 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         if (userName.isEmpty()) {
             throw new Exception("Bitbucket build notifier could not extract the user name from the repository URL");
         }
-        
-        
-        String commitSha1 = buildRevisions.get(urIish.toString());
-        if (commitSha1 == null) {
-            throw new Exception("No commit found to send to Bitbucket!");            
+                
+        String commitId = buildRevisions.get(urIish.toString());
+        if (commitId == null) {
+            throw new Exception("Commit ID could not be found!");
         }
         
-        return new BitbucketBuildStatusResource(userName, repoName, commitSha1);
+        return new BitbucketBuildStatusResource(userName, repoName, commitId);
     }
 
     private void notifyBuildStatus(final BitbucketBuildStatusResource buildStatusResource, final BitbucketBuildStatus buildStatus) throws Exception {
@@ -326,7 +326,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
                 Token token = apiService.getAccessToken(OAuthConstants.EMPTY_TOKEN, verifier);
 
                 if (token.isEmpty()) {
-                    FormValidation.error("Invalid Bitbucket OAuth credentials");
+                    return FormValidation.error("Invalid Bitbucket OAuth credentials");
                 }
 
             } catch (Exception e) {
