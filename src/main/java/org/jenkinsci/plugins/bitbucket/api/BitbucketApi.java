@@ -9,7 +9,7 @@ import org.scribe.oauth.OAuthService;
 
 public class BitbucketApi extends DefaultApi20 {
 
-    private static final String OAUTH_ENDPOINT = "https://bitbucket.org/site/oauth2/";
+    public static final String OAUTH_ENDPOINT = "https://bitbucket.org/site/oauth2/";
 
     @Override
     public String getAccessTokenEndpoint() {
