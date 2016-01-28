@@ -173,8 +173,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         // extract bitbucket user name and repository name from repo URI
         String repoUrl = urIish.getPath();
-
-        String repoName = repoUrl.substring(repoUrl.lastIndexOf("/") + 1, repoUrl.indexOf(".git"));
+        String repoName = repoUrl.substring(
+                repoUrl.lastIndexOf("/") + 1,
+                repoUrl.indexOf(".git") > -1 ? repoUrl.indexOf(".git") : repoUrl.length()
+        );
         if (repoName.isEmpty()) {
             throw new Exception("Bitbucket build notifier could not extract the repository name from the repository URL");
         }
