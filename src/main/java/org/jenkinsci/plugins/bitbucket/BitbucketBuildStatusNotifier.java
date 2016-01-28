@@ -10,6 +10,9 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
+import hudson.plugins.mercurial.MercurialChangeSet;
+import hudson.plugins.mercurial.MercurialChangeSetList;
+import hudson.plugins.mercurial.MercurialSCM;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -150,23 +153,21 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     }
 
     private BitbucketBuildStatusResource createBuildStatusResourceFromBuild(final AbstractBuild build) throws Exception {
-
         SCM scm = build.getProject().getScm();
         if (scm == null) {
             throw new Exception("Bitbucket build notifier only works with SCM");
         }
 
-        if (!(scm instanceof GitSCM)) {
-            throw new Exception("Bitbucket build notifier requires a git repo as SCM");
+        ScmAdapter scmAdapter;
+        if (scm instanceof GitSCM) {
+            scmAdapter = new GitScmAdapter();
+        } else if (scm instanceof MercurialSCM) {
+            scmAdapter = new MercurialScmAdapter();
+        } else {
+            throw new Exception("Bitbucket build notifier requires a git repo or a mercurial repo as SCM");
         }
 
-        GitSCM gitSCM = (GitSCM) scm;
-        List<RemoteConfig> repoList = gitSCM.getRepositories();
-        if (repoList.size() != 1) {
-            throw new Exception("None or multiple repos");
-        }
-
-        URIish urIish = repoList.get(0).getURIs().get(0);
+        URIish urIish = scmAdapter.getRepositoryUri(scm);
         if (!urIish.getHost().equals("bitbucket.org")) {
             throw new Exception("Bitbucket build notifier support only repositories hosted in bitbucket.org");
         }
@@ -174,7 +175,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         // extract bitbucket user name and repository name from repo URI
         String repoUrl = urIish.getPath();
 
-        String repoName = repoUrl.substring(repoUrl.lastIndexOf("/") + 1, repoUrl.indexOf(".git"));
+        String repoName = repoUrl.substring(repoUrl.lastIndexOf("/") + 1);
         if (repoName.isEmpty()) {
             throw new Exception("Bitbucket build notifier could not extract the repository name from the repository URL");
         }
@@ -187,13 +188,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier could not extract the user name from the repository URL");
         }
 
-        // find current revision
-        BuildData buildData = build.getAction(BuildData.class);
-        if(buildData == null || buildData.getLastBuiltRevision() == null) {
-            throw new Exception("Revision could not be found");
-        }
-
-        String commitId = buildData.getLastBuiltRevision().getSha1String();
+        String commitId = scmAdapter.findCurrentCommitId(build);
         if (commitId == null) {
             throw new Exception("Commit ID could not be found!");
         }
@@ -233,6 +228,56 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         String buildName = build.getProject().getFullDisplayName() + " #" + build.getNumber();
 
         return new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName);
+    }
+
+    private interface ScmAdapter {
+        URIish getRepositoryUri(SCM scm) throws Exception;
+        String findCurrentCommitId(AbstractBuild build) throws Exception;
+    }
+
+    private class GitScmAdapter implements ScmAdapter {
+
+        public URIish getRepositoryUri(SCM scm) throws Exception {
+            GitSCM gitSCM = (GitSCM) scm;
+            List<RemoteConfig> repoList = gitSCM.getRepositories();
+            if (repoList.size() != 1) {
+                throw new Exception("None or multiple repos");
+            }
+
+            return repoList.get(0).getURIs().get(0);
+        }
+
+        public String findCurrentCommitId(AbstractBuild build) throws Exception {
+            BuildData buildData = build.getAction(BuildData.class);
+            if(buildData == null || buildData.getLastBuiltRevision() == null) {
+                throw new Exception("Revision could not be found");
+            }
+
+            return buildData.getLastBuiltRevision().getSha1String();
+        }
+    }
+
+    private class MercurialScmAdapter implements ScmAdapter {
+
+        public URIish getRepositoryUri(SCM scm) throws Exception {
+            MercurialSCM hgSCM = (MercurialSCM) scm;
+
+            String source = hgSCM.getSource();
+            if (source == null || source.isEmpty()) {
+                throw new Exception("None or multiple repos");
+            }
+
+            return new URIish(source);
+        }
+
+        public String findCurrentCommitId(AbstractBuild build) throws Exception {
+            MercurialChangeSetList changeSets = (MercurialChangeSetList) build.getChangeSets().get(0);
+            List<MercurialChangeSet> hgChangeSet = changeSets.getLogs();
+            if (hgChangeSet.size() < 1) {
+                throw new Exception("Revision could not be found");
+            }
+            return hgChangeSet.get(0).getRevision();
+        }
     }
 
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
