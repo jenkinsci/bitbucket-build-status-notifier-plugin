@@ -153,7 +153,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             state = BitbucketBuildStatus.INPROGRESS;
         } else if (Result.SUCCESS == result) {
             state = BitbucketBuildStatus.SUCCESSFUL;
-        } else if (Result.UNSTABLE == result || Result.FAILURE == result) {
+        } else if (Result.UNSTABLE == result || Result.FAILURE == result || Result.ABORTED == result) {
             state = BitbucketBuildStatus.FAILED;
         } else {
             // return empty status for every other result (NOT_BUILT, ABORTED)
@@ -215,6 +215,17 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         BitbucketBuildStatusResource buildStatusResource = this.createBuildStatusResourceFromBuild(build);
         BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
 
+        // if previous build was manually aborted by the user and revision is the same than the current one
+        // then update the bitbucket build status resource with current status and current build number
+        AbstractBuild prevBuild = build.getPreviousBuild();
+        if (prevBuild != null && prevBuild.getResult() != null && prevBuild.getResult() == Result.ABORTED) {
+            BitbucketBuildStatusResource prevBuildStatusResource = this.createBuildStatusResourceFromBuild(prevBuild);
+            if (prevBuildStatusResource.getCommitId().equals(buildStatusResource.getCommitId())) {
+                BitbucketBuildStatus prevBuildStatus = this.createBitbucketBuildStatusFromBuild(prevBuild);
+                buildStatus.setKey(prevBuildStatus.getKey());
+            }
+        }
+
         if (credentials == null) {
             Job job = null;
             credentials = this.getCredentials(this.getDescriptor().getGlobalCredentialsId(), job);
@@ -244,7 +255,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
     }
 
-    private BitbucketBuildStatus createBitbucketBuildStatusFromBuild(AbstractBuild build) {
+    private BitbucketBuildStatus createBitbucketBuildStatusFromBuild(AbstractBuild build) throws Exception {
 
         String buildState = this.guessBitbucketBuildState(build.getResult());
         // bitbucket requires the key to be shorter than 40 chars
