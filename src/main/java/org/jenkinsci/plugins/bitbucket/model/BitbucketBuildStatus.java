@@ -50,4 +50,8 @@ public class BitbucketBuildStatus {
     public String getDescription() {
         return description;
     }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
 }
