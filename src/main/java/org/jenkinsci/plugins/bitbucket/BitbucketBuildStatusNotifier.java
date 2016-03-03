@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.bitbucket.api.*;
@@ -214,16 +215,15 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         Token token = apiService.getAccessToken(OAuthConstants.EMPTY_TOKEN, verifier);
         apiService.signRequest(token, request);
 
-        logger.info("This response was received:");
-
         Response response = request.send();
+        logger.info("This response was received:" + response.getBody());
     }
 
     private BitbucketBuildStatus createBitbucketBuildStatusFromBuild(AbstractBuild build) {
 
         String buildState = this.guessBitbucketBuildState(build.getResult());
-
-        String buildKey = build.getProject().getFullDisplayName() + "#" + build.getNumber();
+        // bitbucket requires the key to be shorter than 40 chars
+        String buildKey = DigestUtils.md5Hex(build.getProject().getFullDisplayName() + "#" + build.getNumber());
         String buildUrl = build.getProject().getAbsoluteUrl() + build.getNumber() + '/';
         String buildName = build.getProject().getFullDisplayName() + " #" + build.getNumber();
 
