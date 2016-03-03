@@ -13,7 +13,8 @@ you will be able to know when your build is passing right within the Bitbucket U
 This plugin depends on other Jenkins plugins:
 
 * [Git Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin)
-  * [Credentials Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Plugin)
+* [Mercurial Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Mercurial+Plugin)
+* [Credentials Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Credentials+Plugin)
 
 Please install them before if they are still not installed on your Jenkins server.
 
