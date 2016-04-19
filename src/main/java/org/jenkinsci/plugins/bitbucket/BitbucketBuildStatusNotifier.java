@@ -26,6 +26,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -183,8 +184,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier support only repositories hosted in bitbucket.org");
         }
 
+        // expand parameters on repo url
+        String repoUrl = build.getEnvironment(new LogTaskListener(logger, Level.INFO)).expand(urIish.getPath());
+
         // extract bitbucket user name and repository name from repo URI
-        String repoUrl = urIish.getPath();
         String repoName = repoUrl.substring(
                 repoUrl.lastIndexOf("/") + 1,
                 repoUrl.indexOf(".git") > -1 ? repoUrl.indexOf(".git") : repoUrl.length()
