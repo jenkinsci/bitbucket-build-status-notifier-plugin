@@ -57,14 +57,16 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     private boolean notifyStart;
     private boolean notifyFinish;
     private String credentialsId;
+    private String multiSCMUrl;   // selects the repo to notify for MultiSCM
 
     @DataBoundConstructor
     public BitbucketBuildStatusNotifier(final boolean notifyStart, final boolean notifyFinish,
-                                        final String credentialsId) {
+                                        final String credentialsId, final String multiSCMUrl) {
         super();
         this.notifyStart = notifyStart;
         this.notifyFinish = notifyFinish;
         this.credentialsId = credentialsId;
+        this.multiSCMUrl = multiSCMUrl;
     }
 
     public boolean getNotifyStart() {
@@ -77,6 +79,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     public String getCredentialsId() {
         return this.credentialsId;
+    }
+
+    public String getMultiSCMUrl() {
+        return this.multiSCMUrl;
     }
 
     @Override
@@ -181,7 +187,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         } else if (scm instanceof MercurialSCM) {
             scmAdapter = new MercurialScmAdapter((MercurialSCM) scm);
         } else if (scm instanceof MultiSCM){
-            scmAdapter = new MultiScmAdapter(build);
+            String repoUrl = getMultiSCMUrl();
+            repoUrl = repoUrl == null ? "" : repoUrl.trim();
+            scmAdapter = new MultiScmAdapter(build, repoUrl);
         } else {
             throw new Exception("Bitbucket build notifier requires a git repo or a mercurial repo as SCM");
         }
@@ -356,9 +364,11 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     private class MultiScmAdapter implements ScmAdapter {
 
         private final AbstractBuild build;
+        private final String repoUrl;
 
-        public MultiScmAdapter(AbstractBuild build) {
+        public MultiScmAdapter(AbstractBuild build, String repoUrl) {
             this.build = build;
+            this.repoUrl = repoUrl;
         }
 
         public HashMap getCommitRepoMap() throws Exception {
@@ -369,9 +379,23 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             for (Iterator<SCM> i = scms.iterator(); i.hasNext(); ) {
                 SCM scm = i.next();
                 if (scm instanceof GitSCM) {
-                    commitRepoMap.putAll(new GitScmAdapter((GitSCM) scm, this.build).getCommitRepoMap());
+                    if (this.repoUrl.isEmpty())
+                    {
+                        commitRepoMap.putAll(new GitScmAdapter((GitSCM) scm, this.build).getCommitRepoMap());
+                    }
+                    else
+                    {
+                        List<RemoteConfig> repoList = ((GitSCM) scm).getRepositories();
+                        if (repoList.size() != 1 || this.repoUrl.equals(repoList.get(0).getURIs().get(0).toString()))
+                        {
+                            commitRepoMap.putAll(new GitScmAdapter((GitSCM) scm, this.build).getCommitRepoMap());
+                        }
+                    }
                 } else if (scm instanceof MercurialSCM) {
-                    commitRepoMap.putAll(new MercurialScmAdapter((MercurialSCM) scm).getCommitRepoMap());
+                    if (this.repoUrl.isEmpty() || this.repoUrl.equals(((MercurialSCM) scm).getSource()))
+                    {
+                        commitRepoMap.putAll(new MercurialScmAdapter((MercurialSCM) scm).getCommitRepoMap());
+                    }
                 }
             }
 
