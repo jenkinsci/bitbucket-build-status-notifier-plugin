@@ -234,7 +234,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     private void notifyBuildStatus(final AbstractBuild build, final BuildListener listener) throws Exception {
 
-        UsernamePasswordCredentials credentials = this.getCredentials(this.getCredentialsId(), build.getProject());
+        UsernamePasswordCredentials credentials = BitbucketBuildStatusNotifier.getCredentials(this.getCredentialsId(), build.getProject());
         List<BitbucketBuildStatusResource> buildStatusResources = this.createBuildStatusResources(build);
 
         AbstractBuild prevBuild = build.getPreviousBuild();
@@ -261,7 +261,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
             if (credentials == null) {
                 Job job = null;
-                credentials = this.getCredentials(this.getDescriptor().getGlobalCredentialsId(), job);
+                credentials = BitbucketBuildStatusNotifier.getCredentials(this.getDescriptor().getGlobalCredentialsId(), job);
             }
             if (credentials == null) {
                 throw new Exception("Credentials could not be found!");
@@ -383,6 +383,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         private String globalCredentialsId;
+        
+        public DescriptorImpl() {
+            load();
+        }
 
         public String getGlobalCredentialsId() {
             return globalCredentialsId;
@@ -395,10 +399,6 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         @Override
         public String getDisplayName() {
             return "Bitbucket notify build status";
-        }
-
-        public DescriptorImpl() {
-            load();
         }
 
         @Override
