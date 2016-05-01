@@ -186,7 +186,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             throw new Exception("Bitbucket build notifier requires a git repo or a mercurial repo as SCM");
         }
 
-        HashMap<String, URIish> commitRepoMap = scmAdapter.getCommitRepoMap();
+        Map<String, URIish> commitRepoMap = scmAdapter.getCommitRepoMap();
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
         for (Map.Entry<String, URIish> commitRepoPair : commitRepoMap.entrySet()) {
 
@@ -301,7 +301,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     }
 
     private interface ScmAdapter {
-        HashMap getCommitRepoMap() throws Exception;
+        Map getCommitRepoMap() throws Exception;
     }
 
     private class GitScmAdapter implements ScmAdapter {
@@ -314,7 +314,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.build = build;
         }
 
-        public HashMap getCommitRepoMap() throws Exception {
+        public Map getCommitRepoMap() throws Exception {
             List<RemoteConfig> repoList = this.gitScm.getRepositories();
             if (repoList.size() != 1) {
                 throw new Exception("None or multiple repos");
@@ -340,7 +340,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.hgSCM = scm;
         }
 
-        public HashMap getCommitRepoMap() throws Exception {
+        public Map getCommitRepoMap() throws Exception {
             String source = this.hgSCM.getSource();
             if (source == null || source.isEmpty()) {
                 throw new Exception("None or multiple repos");
@@ -361,7 +361,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             this.build = build;
         }
 
-        public HashMap getCommitRepoMap() throws Exception {
+        public Map getCommitRepoMap() throws Exception {
             MultiSCM multiSCM = (MultiSCM) this.build.getProject().getScm();
             List<SCM> scms = multiSCM.getConfiguredSCMs();
 
