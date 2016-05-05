@@ -24,6 +24,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.LogTaskListener;
@@ -296,8 +297,14 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         String buildKey = DigestUtils.md5Hex(build.getProject().getFullDisplayName() + "#" + build.getNumber());
         String buildUrl = build.getProject().getAbsoluteUrl() + build.getNumber() + '/';
         String buildName = build.getProject().getFullDisplayName() + " #" + build.getNumber();
+        AbstractTestResultAction testResult = build.getAction(AbstractTestResultAction.class);
+        String description = "";
+        if (testResult != null) {
+            int passedCount = testResult.getTotalCount() - testResult.getFailCount();
+            description = passedCount + " of " + testResult.getTotalCount() + " tests passed";
+        }
 
-        return new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName);
+        return new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName, description);
     }
 
     private interface ScmAdapter {

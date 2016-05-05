@@ -86,6 +86,11 @@
       <artifactId>multiple-scms</artifactId>
       <version>0.6</version>
     </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>junit</artifactId>
+      <version>1.0</version>
+    </dependency>
   </dependencies>
 
   <build>
