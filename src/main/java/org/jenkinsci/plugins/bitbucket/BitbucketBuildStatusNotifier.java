@@ -44,6 +44,7 @@ import org.jenkinsci.plugins.bitbucket.api.*;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatus;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusResource;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusSerializer;
+import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -54,6 +55,7 @@ import org.scribe.model.*;
 public class BitbucketBuildStatusNotifier extends Notifier {
 
     private static final Logger logger = Logger.getLogger(BitbucketBuildStatusNotifier.class.getName());
+    private static final BitbucketHostValidator hostValidator = new BitbucketHostValidator();
 
     private boolean notifyStart;
     private boolean notifyFinish;
@@ -193,8 +195,8 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
             // if repo is not hosted in bitbucket.org then log it and remove repo from being notified
             URIish repoUri = commitRepoPair.getValue();
-            if (!repoUri.getHost().equals("bitbucket.org")) {
-                logger.log(Level.INFO, "Bitbucket build notifier support only repositories hosted in bitbucket.org");
+            if (!hostValidator.isValid(repoUri.getHost())) {
+                logger.log(Level.INFO, hostValidator.renderError());
                 continue;
             }
 
