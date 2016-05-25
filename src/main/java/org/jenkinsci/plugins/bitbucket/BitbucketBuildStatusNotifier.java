@@ -287,7 +287,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             apiService.signRequest(token, request);
 
             Response response = request.send();
-            logger.info("This response was received:" + response.getBody());
+
+            logger.info("This request was sent: " + request.getBodyContents());
+            logger.info("This response was received: " + response.getBody());
             listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
         }
     }
