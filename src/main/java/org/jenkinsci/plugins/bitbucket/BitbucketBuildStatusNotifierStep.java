@@ -24,55 +24,28 @@
 
 package org.jenkinsci.plugins.bitbucket;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.XmlFile;
-import hudson.model.*;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 
-import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.util.BuildData;
-import hudson.plugins.mercurial.MercurialSCM;
-import hudson.scm.SCM;
-import hudson.tasks.test.AbstractTestResultAction;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import hudson.util.LogTaskListener;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.eclipse.jgit.transport.RemoteConfig;
-import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.plugins.bitbucket.api.BitbucketApi;
-import org.jenkinsci.plugins.bitbucket.api.BitbucketApiService;
-import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatus;
-import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusResource;
-import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusSerializer;
-import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.steps.*;
-
-import org.kohsuke.stapler.*;
-import org.scribe.model.*;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
+
+import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatus;
+import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
+import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
+
+import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
 
@@ -91,249 +64,31 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
         this.credentialsId = credentialsId;
     }
 
-    private String buildStatus;
-    public String getBuildStatus() { return this.buildStatus; }
+    private String buildKey;
+    public String getBuildKey() { return this.buildKey; }
+    @DataBoundSetter public void setBuildKey(String buildKey) {
+        this.buildKey = buildKey;
+    }
+
+    private String buildName;
+    public String getBuildName() { return this.buildName; }
+    @DataBoundSetter public void setBuildName(String buildName) {
+        this.buildName = buildName;
+    }
+
+    private String buildDescription;
+    public String getBuildDescription() { return this.buildDescription; }
+    @DataBoundSetter public void setBuildDescription(String buildDescription) {
+        this.buildDescription = buildDescription;
+    }
+
+    private String buildState;
+    public String getBuildState() { return this.buildState; }
 
     @DataBoundConstructor
-    public BitbucketBuildStatusNotifierStep(final String buildStatus) {
+    public BitbucketBuildStatusNotifierStep(final String buildState) {
         this.credentialsId = credentialsId;
-        this.buildStatus = buildStatus;
-    }
-
-    private List<BitbucketBuildStatusResource> createBuildStatusResources(final Run<?, ?> build) throws Exception {
-        WorkflowJob project = (WorkflowJob)build.getParent();
-        Collection<? extends SCM> scms = project.getSCMs();
-        List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
-
-        for(SCM scm: scms) {
-            if (scm == null) {
-                throw new Exception("Bitbucket build notifier only works with SCM");
-            }
-
-            BitbucketBuildStatusNotifierStep.ScmAdapter scmAdapter;
-            if (scm instanceof GitSCM) {
-                scmAdapter = new BitbucketBuildStatusNotifierStep.GitScmAdapter((GitSCM) scm, build);
-            } else if (scm instanceof MercurialSCM) {
-                scmAdapter = new BitbucketBuildStatusNotifierStep.MercurialScmAdapter((MercurialSCM) scm);
-            } else if (scm instanceof MultiSCM) {
-                scmAdapter = new BitbucketBuildStatusNotifierStep.MultiScmAdapter(build);
-            } else {
-                throw new Exception("Bitbucket build notifier requires a git repo or a mercurial repo as SCM");
-            }
-
-            Map<String, URIish> commitRepoMap = scmAdapter.getCommitRepoMap();
-            for (Map.Entry<String, URIish> commitRepoPair : commitRepoMap.entrySet()) {
-
-                // if repo is not hosted in bitbucket.org then log it and remove repo from being notified
-                URIish repoUri = commitRepoPair.getValue();
-                if (!hostValidator.isValid(repoUri.getHost())) {
-                    logger.log(Level.INFO, hostValidator.renderError());
-                    continue;
-                }
-
-                // expand parameters on repo url
-                String repoUrl = build.getEnvironment(new LogTaskListener(logger, Level.INFO)).expand(repoUri.getPath());
-
-                // extract bitbucket user name and repository name from repo URI
-                String repoName = repoUrl.substring(
-                        repoUrl.lastIndexOf("/") + 1,
-                        repoUrl.indexOf(".git") > -1 ? repoUrl.indexOf(".git") : repoUrl.length()
-                );
-
-                if (repoName.isEmpty()) {
-                    logger.log(Level.INFO, "Bitbucket build notifier could not extract the repository name from the repository URL");
-                    continue;
-                }
-
-                String userName = repoUrl.substring(0, repoUrl.indexOf("/" + repoName));
-                if (userName.indexOf("/") != -1) {
-                    userName = userName.substring(userName.indexOf("/") + 1, userName.length());
-                }
-                if (userName.isEmpty()) {
-                    logger.log(Level.INFO, "Bitbucket build notifier could not extract the user name from the repository URL");
-                    continue;
-                }
-
-                String commitId = commitRepoPair.getKey();
-                if (commitId == null) {
-                    logger.log(Level.INFO, "Commit ID could not be found!");
-                    continue;
-                }
-
-                buildStatusResources.add(new BitbucketBuildStatusResource(userName, repoName, commitId));
-            }
-        }
-
-        return buildStatusResources;
-    }
-
-    private void notifyBuildStatus(final Run<?, ?> build, final TaskListener listener,
-                                   final StepContext context) throws Exception {
-
-        listener.getLogger().println(getDescriptor().getId().replace("Step", ""));
-        WorkflowJob project = (WorkflowJob)build.getParent();
-        UsernamePasswordCredentials credentials = BitbucketBuildStatusNotifierStep.getCredentials(getCredentialsId(), project);
-        List<BitbucketBuildStatusResource> buildStatusResources = this.createBuildStatusResources(build);
-
-        Run<?, ?> prevBuild = build.getPreviousBuild();
-        List<BitbucketBuildStatusResource> prevBuildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
-        if (prevBuild != null && prevBuild.getResult() != null && prevBuild.getResult() == Result.ABORTED) {
-            prevBuildStatusResources = this.createBuildStatusResources(prevBuild);
-        }
-
-        for (Iterator<BitbucketBuildStatusResource> i = buildStatusResources.iterator(); i.hasNext(); ) {
-
-            BitbucketBuildStatusResource buildStatusResource = i.next();
-            BitbucketBuildStatus buildStatus = this.createBitbucketBuildStatusFromBuild(build);
-
-            // if previous build was manually aborted by the user and revision is the same than the current one
-            // then update the bitbucket build status resource with current status and current build number
-            for (Iterator<BitbucketBuildStatusResource> j = prevBuildStatusResources.iterator(); j.hasNext(); ) {
-                BitbucketBuildStatusResource prevBuildStatusResource = j.next();
-                if (prevBuildStatusResource.getCommitId().equals(buildStatusResource.getCommitId())) {
-                    BitbucketBuildStatus prevBuildStatus = this.createBitbucketBuildStatusFromBuild(prevBuild);
-                    buildStatus.setKey(prevBuildStatus.getKey());
-                    break;
-                }
-            }
-
-            if (credentials == null) {
-                context.onFailure(new Exception("Credentials could not be found!"));
-            }
-
-            OAuthConfig config = new OAuthConfig(credentials.getUsername(), credentials.getPassword().getPlainText());
-            BitbucketApiService apiService = (BitbucketApiService) new BitbucketApi().createService(config);
-
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.registerTypeAdapter(BitbucketBuildStatus.class, new BitbucketBuildStatusSerializer());
-            gsonBuilder.setPrettyPrinting();
-            Gson gson = gsonBuilder.create();
-
-            OAuthRequest request = new OAuthRequest(Verb.POST, buildStatusResource.generateUrl(Verb.POST));
-            request.addHeader("Content-type", "application/json");
-            request.addPayload(gson.toJson(buildStatus));
-
-            Verifier verifier = null;
-            Token token = apiService.getAccessToken(OAuthConstants.EMPTY_TOKEN, verifier);
-            apiService.signRequest(token, request);
-
-            Response response = request.send();
-
-            logger.info("This request was sent: " + request.getBodyContents());
-            logger.info("This response was received: " + response.getBody());
-            listener.getLogger().println("Sending build status " + buildStatus.getState() + " for commit " + buildStatusResource.getCommitId() + " to BitBucket is done!");
-        }
-    }
-
-    private BitbucketBuildStatus createBitbucketBuildStatusFromBuild(Run<?, ?> build) throws Exception {
-        WorkflowJob project = (WorkflowJob)build.getParent();
-        String buildState = this.getBuildStatus();
-        // bitbucket requires the key to be shorter than 40 chars
-        String buildKey = DigestUtils.md5Hex(project.getFullDisplayName() + "#" + build.getNumber());
-        String buildUrl = project.getAbsoluteUrl() + build.getNumber() + '/';
-        String buildName = project.getFullDisplayName() + " #" + build.getNumber();
-        AbstractTestResultAction testResult = build.getAction(AbstractTestResultAction.class);
-        String description = "";
-        if (testResult != null) {
-            int passedCount = testResult.getTotalCount() - testResult.getFailCount();
-            description = passedCount + " of " + testResult.getTotalCount() + " tests passed";
-        }
-
-        return new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName, description);
-    }
-
-    public static StandardUsernamePasswordCredentials getCredentials(String credentialsId, Job<?,?> owner) {
-        if (credentialsId != null) {
-            for (StandardUsernamePasswordCredentials c : CredentialsProvider.lookupCredentials(StandardUsernamePasswordCredentials.class, owner, null, URIRequirementBuilder.fromUri(BitbucketApi.OAUTH_ENDPOINT).build())) {
-                if (c.getId().equals(credentialsId)) {
-                    return c;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private interface ScmAdapter {
-        Map getCommitRepoMap() throws Exception;
-    }
-
-    private class GitScmAdapter implements BitbucketBuildStatusNotifierStep.ScmAdapter {
-
-        private final GitSCM gitScm;
-        private final Run<?, ?> build;
-
-        public GitScmAdapter(GitSCM scm, Run<?, ?> build) {
-            this.gitScm = scm;
-            this.build = build;
-        }
-
-        public Map getCommitRepoMap() throws Exception {
-            List<RemoteConfig> repoList = this.gitScm.getRepositories();
-            if (repoList.size() != 1) {
-                throw new Exception("None or multiple repos");
-            }
-
-            HashMap<String, URIish> commitRepoMap = new HashMap();
-            BuildData buildData = build.getAction(BuildData.class);
-            if (buildData == null || buildData.getLastBuiltRevision() == null) {
-                logger.warning("Build data could not be found");
-            } else {
-                commitRepoMap.put(buildData.getLastBuiltRevision().getSha1String(), repoList.get(0).getURIs().get(0));
-            }
-
-            return commitRepoMap;
-        }
-    }
-
-    private class MercurialScmAdapter implements BitbucketBuildStatusNotifierStep.ScmAdapter {
-
-        private final MercurialSCM hgSCM;
-
-        public MercurialScmAdapter(MercurialSCM scm) {
-            this.hgSCM = scm;
-        }
-
-        public Map getCommitRepoMap() throws Exception {
-            String source = this.hgSCM.getSource();
-            if (source == null || source.isEmpty()) {
-                throw new Exception("None or multiple repos");
-            }
-
-            HashMap<String, URIish> commitRepoMap = new HashMap();
-            commitRepoMap.put(this.hgSCM.getRevision(), new URIish(this.hgSCM.getSource()));
-
-            return commitRepoMap;
-        }
-    }
-
-    private class MultiScmAdapter implements BitbucketBuildStatusNotifierStep.ScmAdapter {
-
-        private final Run<?, ?> build;
-
-        public MultiScmAdapter(Run<?, ?> build) {
-            this.build = build;
-        }
-
-        public Map getCommitRepoMap() throws Exception {
-            WorkflowJob project = (WorkflowJob)this.build.getParent();
-            HashMap<String, URIish> commitRepoMap = new HashMap();
-            for(SCM s: project.getSCMs()) {
-                MultiSCM multiSCM = (MultiSCM)s;
-                List<SCM> scms = multiSCM.getConfiguredSCMs();
-
-                for (Iterator<SCM> i = scms.iterator(); i.hasNext(); ) {
-                    SCM scm = i.next();
-                    if (scm instanceof GitSCM) {
-                        commitRepoMap.putAll(new BitbucketBuildStatusNotifierStep.GitScmAdapter((GitSCM) scm, this.build).getCommitRepoMap());
-                    } else if (scm instanceof MercurialSCM) {
-                        commitRepoMap.putAll(new BitbucketBuildStatusNotifierStep.MercurialScmAdapter((MercurialSCM) scm).getCommitRepoMap());
-                    }
-                }
-            }
-
-            return commitRepoMap;
-        }
+        this.buildState = buildState;
     }
 
     @Override
@@ -378,16 +133,10 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
         private static final long serialVersionUID = 1L;
 
         @StepContextParameter
-        private transient TaskListener listener;
+        private transient Run<?, ?> build;
 
         @StepContextParameter
-        private transient FilePath ws;
-
-        @StepContextParameter
-        private transient Run build;
-
-        @StepContextParameter
-        private transient Launcher launcher;
+        private transient TaskListener taskListener;
 
         @Inject
         private transient BitbucketBuildStatusNotifierStep step;
@@ -407,10 +156,32 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
         public Void run() throws Exception {
             this.readGlobalConfiguration();
 
-            this.step.notifyBuildStatus(this.build, this.listener, getContext());
+            String buildState = step.getBuildState();
 
-            if(step.getBuildStatus().equals(BitbucketBuildStatus.FAILED)) {
-                throw new Exception("Build failed");
+            String buildKey = step.getBuildKey();
+            if(buildKey == null) {
+                buildKey = BitbucketBuildStatusHelper.defaultBitbucketBuildKeyFromBuild(build);
+            }
+
+            String buildName = step.getBuildName();
+            if(buildName == null) {
+                buildName = BitbucketBuildStatusHelper.defaultBitbucketBuildNameFromBuild(build);
+            }
+
+            String buildDescription = step.getBuildDescription();
+            if(buildDescription == null) {
+                buildDescription = BitbucketBuildStatusHelper.defaultBitbucketBuildDescriptionFromBuild(build);
+            }
+
+            String buildUrl = BitbucketBuildStatusHelper.builUrlFromBuild(build);
+
+            BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
+                    buildDescription);
+
+            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentialsId(), build, taskListener, buildStatus);
+
+            if(buildState.equals(BitbucketBuildStatus.FAILED)) {
+                throw new Exception(buildDescription);
             }
 
             return null;
