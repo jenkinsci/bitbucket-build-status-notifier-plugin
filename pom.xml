@@ -24,7 +24,7 @@
 
   <name>Bitbucket Build Status Notifier Plugin</name>
   <description>Integrates Jenkins build status with BitBucket</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/Bitbucket+Build+Status+Notifier+Plugin</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Bitbucket+Cloud+Build+Status+Notifier+Plugin</url>
   <licenses>
     <license>
       <name>MIT License</name>
