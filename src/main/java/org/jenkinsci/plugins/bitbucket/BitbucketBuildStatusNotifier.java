@@ -10,12 +10,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Item;
-import hudson.model.Job;
-import hudson.model.Result;
+import hudson.model.*;
 import hudson.plugins.git.GitSCM;
 import hudson.plugins.git.util.BuildData;
 import hudson.plugins.mercurial.MercurialSCM;
@@ -28,19 +23,14 @@ import hudson.tasks.test.AbstractTestResultAction;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.LogTaskListener;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.validator.UrlValidator;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
-import org.jenkinsci.plugins.bitbucket.api.*;
+import org.jenkinsci.plugins.bitbucket.api.BitbucketApi;
+import org.jenkinsci.plugins.bitbucket.api.BitbucketApiService;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatus;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusResource;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusSerializer;
@@ -51,6 +41,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.scribe.model.*;
+
+import java.net.MalformedURLException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BitbucketBuildStatusNotifier extends Notifier {
 
@@ -92,13 +87,11 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         try {
             this.notifyBuildStatus(build, listener);
+            logger.info("Bitbucket notify on start succeeded");
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
-            e.printStackTrace(listener.getLogger());
         }
-
-        logger.info("Bitbucket notify on start succeeded");
 
         return true;
     }
@@ -113,13 +106,11 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         try {
             this.notifyBuildStatus(build, listener);
+            logger.info("Bitbucket notify on finish succeeded");
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
-            e.printStackTrace(listener.getLogger());
         }
-
-        logger.info("Bitbucket notify on finish succeeded");
 
         return true;
     }
@@ -296,10 +287,11 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     private BitbucketBuildStatus createBitbucketBuildStatusFromBuild(AbstractBuild build) throws Exception {
 
+        UrlValidator validator = new UrlValidator();
         String buildState = this.guessBitbucketBuildState(build.getResult());
         // bitbucket requires the key to be shorter than 40 chars
         String buildKey = DigestUtils.md5Hex(build.getProject().getFullDisplayName() + "#" + build.getNumber());
-        String buildUrl = build.getProject().getAbsoluteUrl() + build.getNumber() + '/';
+        URIish buildUrl = new URIish(build.getProject().getAbsoluteUrl() + build.getNumber() + '/');
         String buildName = build.getProject().getFullDisplayName() + " #" + build.getNumber();
         AbstractTestResultAction testResult = build.getAction(AbstractTestResultAction.class);
         String description = "";
@@ -308,7 +300,12 @@ public class BitbucketBuildStatusNotifier extends Notifier {
             description = passedCount + " of " + testResult.getTotalCount() + " tests passed";
         }
 
-        return new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName, description);
+        // validate URL to avoid Bitbucket bad requests
+        if (!validator.isValid(buildUrl.toString())) {
+            throw new MalformedURLException("Job URL " + buildUrl.toString() + " is not valid. Please ensure your Jenkins host has a valid URL wihtin its configuration.");
+        }
+
+        return new BitbucketBuildStatus(buildState, buildKey, buildUrl.toString(), buildName, description);
     }
 
     private interface ScmAdapter {
@@ -438,6 +435,8 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         public FormValidation doCheckCredentialsId(@QueryParameter final String credentialsId,
                                                    @AncestorInPath final Job<?,?> owner) {
+
+
             String globalCredentialsId = this.getGlobalCredentialsId();
 
             if (credentialsId == null || credentialsId.isEmpty()) {
