@@ -180,12 +180,12 @@ class BitbucketBuildStatusHelper {
         return state;
     }
 
-    public static void notifyBuildStatus(final String credentialsId, final Run<?, ?> build,
+    public static void notifyBuildStatus(UsernamePasswordCredentials credentials, final Run<?, ?> build,
                                          final TaskListener listener) throws Exception {
-        notifyBuildStatus(credentialsId, build, listener, createBitbucketBuildStatusFromBuild(build));
+        notifyBuildStatus(credentials, build, listener, createBitbucketBuildStatusFromBuild(build));
     }
 
-    public static void notifyBuildStatus(final String credentialsId, final Run<?, ?> build,
+    public static void notifyBuildStatus(UsernamePasswordCredentials credentials, final Run<?, ?> build,
                                          final TaskListener listener, BitbucketBuildStatus buildStatus) throws Exception {
 
         List<BitbucketBuildStatusResource> buildStatusResources = createBuildStatusResources(build);
@@ -208,17 +208,15 @@ class BitbucketBuildStatusHelper {
                 }
             }
 
-            sendBuildStatusNotification(credentialsId, build, buildStatusResource, buildStatus, listener);
+            sendBuildStatusNotification(credentials, build, buildStatusResource, buildStatus, listener);
         }
     }
 
-    public static void sendBuildStatusNotification(final String credentialsId,
+    public static void sendBuildStatusNotification(final UsernamePasswordCredentials credentials,
                                                    final Run<?, ?> build,
                                                    final BitbucketBuildStatusResource buildStatusResource,
                                                    final BitbucketBuildStatus buildStatus,
                                                    final TaskListener listener) throws Exception {
-        UsernamePasswordCredentials credentials = getCredentials(credentialsId, build.getParent());
-
         if (credentials == null) {
             throw new Exception("Credentials could not be found!");
         }

@@ -24,10 +24,12 @@
 
 package org.jenkinsci.plugins.bitbucket;
 
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.google.inject.Inject;
 
 import hudson.Extension;
 import hudson.XmlFile;
+import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 
@@ -54,9 +56,6 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
 
     private String credentialsId;
     public String getCredentialsId() {
-        if (credentialsId == null) {
-            return getDescriptor().getGlobalCredentialsId();
-        }
         return this.credentialsId;
     }
 
@@ -94,6 +93,16 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
     @Override
     public DescriptorImpl getDescriptor() {
         return Jenkins.getInstance().getDescriptorByType(DescriptorImpl.class);
+    }
+
+    private StandardUsernamePasswordCredentials getCredentials(Run<?,?> build) {
+        StandardUsernamePasswordCredentials credentials = BitbucketBuildStatusHelper
+                .getCredentials(getCredentialsId(), build.getParent());
+        if (credentials == null) {
+            credentials = BitbucketBuildStatusHelper
+                    .getCredentials(this.getDescriptor().getGlobalCredentialsId(), null);
+        }
+        return credentials;
     }
 
     @Extension
@@ -178,7 +187,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);
 
-            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentialsId(), build, taskListener, buildStatus);
+            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), build, taskListener, buildStatus);
 
             if(buildState.equals(BitbucketBuildStatus.FAILED)) {
                 throw new Exception(buildDescription);

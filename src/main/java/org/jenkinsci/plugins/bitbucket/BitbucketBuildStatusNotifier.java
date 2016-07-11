@@ -8,11 +8,7 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Item;
-import hudson.model.Job;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -58,7 +54,17 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     }
 
     public String getCredentialsId() {
-        return this.credentialsId;
+        return this.credentialsId != null ? this.credentialsId : this.getDescriptor().getGlobalCredentialsId();
+    }
+
+    private StandardUsernamePasswordCredentials getCredentials(AbstractBuild<?,?> build) {
+        StandardUsernamePasswordCredentials credentials = BitbucketBuildStatusHelper
+                .getCredentials(getCredentialsId(), build.getProject());
+        if (credentials == null) {
+            credentials = BitbucketBuildStatusHelper
+                    .getCredentials(this.getDescriptor().getGlobalCredentialsId(), null);
+        }
+        return credentials;
     }
 
     @Override
@@ -70,9 +76,8 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         logger.info("Bitbucket notify on start");
 
         try {
-            BitbucketBuildStatusHelper.notifyBuildStatus(getCredentialsId(), build, listener);
+            BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), build, listener);
         } catch (Exception e) {
-            logger.log(Level.INFO, "Bitbucket notify on start failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
             e.printStackTrace(listener.getLogger());
         }
@@ -91,7 +96,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         logger.info("Bitbucket notify on finish");
 
         try {
-            BitbucketBuildStatusHelper.notifyBuildStatus(getCredentialsId(), build, listener);
+            BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), build, listener);
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
