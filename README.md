@@ -75,7 +75,7 @@ Third, you need to add the Bitbucket OAuth Consumer credentials. You have two wa
  4. Click **Add** button.
 7. Select the desired credentials.
 
-### Configure Jenkins to notify Bitbucket
+### Configure Jenkins to notify Bitbucket from a standard build
 
 Once you have configured the credentials, configure jenkins to notify Bitbucket.
 
@@ -83,6 +83,74 @@ Once you have configured the credentials, configure jenkins to notify Bitbucket.
 2. Click **Configure**.
 3. Select **Bitbucket notify build status**.
 4. Choose whether you want to notify the build status on Jenkins to Bitbucket.
+
+### Pipeline step to notify Bitbucket
+
+Once you have configured the credential, you can notify BitBucket from your Pipeline script through the `bitbucketStatusNotify` step.
+
+#### Usage
+
+The `bitbucketStatusNotify` step notifies the status of a build identified by a build key and build name to BitBucket.
+If `buildKey` and `buildName` parameters are not provided, a standard name will be assigned to the build (NameOfYourJob #numberOfBuild - eg. MyProject #32).
+When a `FAILED` status is sent to BitBucket, `bitbucketStatusNotify` throws an exception terminating your Pipeline.
+
+```groovy
+  ...
+  stage 'Build'
+    bitbucketStatusNotify(
+      buildState: 'INPROGRESS',
+      buildKey: 'build',
+      buildName: 'Build'
+    )
+    try {
+        myBuildFunction()
+        bitbucketStatusNotify(
+          buildState: 'SUCCESSFUL',
+          buildKey: 'build',
+          buildName: 'Build'
+        )
+    } catch(Exception e) {
+        bitbucketStatusNotify(
+          buildState: 'FAILED',
+          buildKey: 'build',
+          buildName: 'Build',
+          buildDescription: 'Something went wrong with build!'
+        )
+    }
+  stage 'Test'
+    bitbucketStatusNotify(
+      buildState: 'INPROGRESS',
+      buildKey: 'test',
+      buildName: 'Test'
+    )
+    try {
+        myTestFunction()
+        bitbucketStatusNotify(
+          buildState: 'SUCCESSFUL',
+          buildKey: 'test',
+          buildName: 'Test'
+        )
+    } catch(Exception e) {
+        bitbucketStatusNotify(
+          buildState: 'FAILED',
+          buildKey: 'test',
+          buildName: 'Test',
+          buildDescription: 'Something went wrong with tests!'
+        )
+    }
+  ...
+```
+
+#### API Summary
+
+Parameter:
+
+| Name | Type | Optional | Description |
+| --- | --- | --- | --- |
+| `buildState` | `"INPROGRESS"|"SUCCESSFUL"|"FAILED"` | no | The status of the current build phase
+| `buildKey` | String | yes | The unique key identifying the current build phase
+| `buildName` | String | yes | The build phase's name shown on BitBucket
+| `buildDescription` | String | yes | The build phase's description shown on BitBucket
 
 ## Contributions
 
