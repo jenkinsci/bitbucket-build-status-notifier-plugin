@@ -58,14 +58,16 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     private boolean notifyStart;
     private boolean notifyFinish;
+    private boolean overrideLatestBuild;
     private String credentialsId;
 
     @DataBoundConstructor
     public BitbucketBuildStatusNotifier(final boolean notifyStart, final boolean notifyFinish,
-                                        final String credentialsId) {
+                                        final boolean overrideLatestBuild, final String credentialsId) {
         super();
         this.notifyStart = notifyStart;
         this.notifyFinish = notifyFinish;
+        this.overrideLatestBuild = overrideLatestBuild;
         this.credentialsId = credentialsId;
     }
 
@@ -75,6 +77,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     public boolean getNotifyFinish() {
         return this.notifyFinish;
+    }
+
+    public boolean getOverrideLatestBuild() {
+        return this.overrideLatestBuild;
     }
 
     public String getCredentialsId() {
