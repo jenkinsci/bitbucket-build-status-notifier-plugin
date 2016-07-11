@@ -29,7 +29,6 @@ import com.google.inject.Inject;
 
 import hudson.Extension;
 import hudson.XmlFile;
-import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 
@@ -182,7 +181,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
                 buildDescription = BitbucketBuildStatusHelper.defaultBitbucketBuildDescriptionFromBuild(build);
             }
 
-            String buildUrl = BitbucketBuildStatusHelper.builUrlFromBuild(build);
+            String buildUrl = BitbucketBuildStatusHelper.buildUrlFromBuild(build);
 
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);

@@ -35,7 +35,6 @@ import org.jenkinsci.plugins.bitbucket.scm.ScmAdapter;
 import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.scribe.model.*;
 
 class BitbucketBuildStatusHelper {
@@ -145,7 +144,7 @@ class BitbucketBuildStatusHelper {
         return description;
     }
 
-    public static String builUrlFromBuild(Run<?, ?> build) {
+    public static String buildUrlFromBuild(Run<?, ?> build) {
         Job<?, ?> project = build.getParent();
         return project.getAbsoluteUrl() + build.getNumber() + '/';
     }
@@ -154,7 +153,7 @@ class BitbucketBuildStatusHelper {
         String buildState = guessBitbucketBuildState(build.getResult());
         // bitbucket requires the key to be shorter than 40 chars
         String buildKey = defaultBitbucketBuildKeyFromBuild(build);
-        String buildUrl = builUrlFromBuild(build);
+        String buildUrl = buildUrlFromBuild(build);
         String buildName = defaultBitbucketBuildNameFromBuild(build);
         String description = defaultBitbucketBuildDescriptionFromBuild(build);
 
