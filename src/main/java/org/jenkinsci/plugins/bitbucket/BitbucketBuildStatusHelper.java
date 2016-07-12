@@ -133,14 +133,13 @@ class BitbucketBuildStatusHelper {
         Job<?, ?> project = build.getParent();
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
-        if(project instanceof WorkflowJob) {
+        if (project instanceof WorkflowJob) {
             Collection<? extends SCM> scms = ((WorkflowJob)project).getSCMs();
 
             for (SCM scm : scms) {
                 buildStatusResources.addAll(createBuildStatusResources(scm, build));
             }
-        }
-        else if(project instanceof AbstractProject) {
+        } else if (project instanceof AbstractProject) {
             SCM scm = ((AbstractProject)project).getScm();
             buildStatusResources = createBuildStatusResources(scm, build);
         }
@@ -153,9 +152,19 @@ class BitbucketBuildStatusHelper {
         return DigestUtils.md5Hex(project.getFullDisplayName() + "#" + build.getNumber());
     }
 
+    public static String uniqueBitbucketBuildKeyFromBuild(Run<?, ?> build) {
+        Job<?, ?> project = build.getParent();
+        return DigestUtils.md5Hex(project.getFullDisplayName());
+    }
+
     public static String defaultBitbucketBuildNameFromBuild(Run<?, ?> build) {
         Job<?, ?> project = build.getParent();
         return project.getFullDisplayName() + " #" + build.getNumber();
+    }
+
+    public static String uniqueBitbucketBuildNameFromBuild(Run<?, ?> build) {
+        Job<?, ?> project = build.getParent();
+        return project.getFullDisplayName();
     }
 
     public static String defaultBitbucketBuildDescriptionFromBuild(Run<?, ?> build) {
@@ -173,12 +182,19 @@ class BitbucketBuildStatusHelper {
         return project.getAbsoluteUrl() + build.getNumber() + '/';
     }
 
-    private static BitbucketBuildStatus createBitbucketBuildStatusFromBuild(Run<?, ?> build) throws Exception {
+    private static BitbucketBuildStatus createBitbucketBuildStatusFromBuild(Run<?, ?> build, boolean overrideLatestBuild) throws Exception {
+        String buildKey = "";
+        String buildName = "";
         String buildState = guessBitbucketBuildState(build.getResult());
         // bitbucket requires the key to be shorter than 40 chars
-        String buildKey = defaultBitbucketBuildKeyFromBuild(build);
+        if (overrideLatestBuild) {
+            buildKey = uniqueBitbucketBuildKeyFromBuild(build);
+            buildName = uniqueBitbucketBuildNameFromBuild(build);
+        } else {
+            buildKey = defaultBitbucketBuildKeyFromBuild(build);
+            buildName = defaultBitbucketBuildNameFromBuild(build);
+        }
         String buildUrl = buildUrlFromBuild(build);
-        String buildName = defaultBitbucketBuildNameFromBuild(build);
         String description = defaultBitbucketBuildDescriptionFromBuild(build);
 
         return new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName, description);
@@ -196,20 +212,21 @@ class BitbucketBuildStatusHelper {
         } else if (Result.UNSTABLE == result || Result.FAILURE == result || Result.ABORTED == result) {
             state = BitbucketBuildStatus.FAILED;
         } else {
-            // return empty status for every other result (NOT_BUILT, ABORTED)
+            // return empty status for every other result (NOT_BUILT)
             state = null;
         }
 
         return state;
     }
 
-    public static void notifyBuildStatus(UsernamePasswordCredentials credentials, final Run<?, ?> build,
-                                         final TaskListener listener) throws Exception {
-        notifyBuildStatus(credentials, build, listener, createBitbucketBuildStatusFromBuild(build));
+    public static void notifyBuildStatus(UsernamePasswordCredentials credentials, boolean overrideLatestBuild,
+                                         final Run<?, ?> build, final TaskListener listener) throws Exception {
+        notifyBuildStatus(credentials, overrideLatestBuild, build, listener, createBitbucketBuildStatusFromBuild(build, overrideLatestBuild));
     }
 
-    public static void notifyBuildStatus(UsernamePasswordCredentials credentials, final Run<?, ?> build,
-                                         final TaskListener listener, BitbucketBuildStatus buildStatus) throws Exception {
+    public static void notifyBuildStatus(UsernamePasswordCredentials credentials, boolean overrideLatestBuild,
+                                         final Run<?, ?> build, final TaskListener listener,
+                                         BitbucketBuildStatus buildStatus) throws Exception {
 
         List<BitbucketBuildStatusResource> buildStatusResources = createBuildStatusResources(build);
 
@@ -225,8 +242,9 @@ class BitbucketBuildStatusHelper {
             // then update the bitbucket build status resource with current status and current build number
             for (BitbucketBuildStatusResource prevBuildStatusResource : prevBuildStatusResources) {
                 if (prevBuildStatusResource.getCommitId().equals(buildStatusResource.getCommitId())) {
-                    BitbucketBuildStatus prevBuildStatus = createBitbucketBuildStatusFromBuild(prevBuild);
+                    BitbucketBuildStatus prevBuildStatus = createBitbucketBuildStatusFromBuild(prevBuild, overrideLatestBuild);
                     buildStatus.setKey(prevBuildStatus.getKey());
+
                     break;
                 }
             }
