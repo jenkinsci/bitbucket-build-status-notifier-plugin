@@ -186,7 +186,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);
 
-            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), build, taskListener, buildStatus);
+            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), false, build, taskListener, buildStatus);
 
             if(buildState.equals(BitbucketBuildStatus.FAILED)) {
                 throw new Exception(buildDescription);
