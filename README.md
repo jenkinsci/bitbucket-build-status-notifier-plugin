@@ -1,7 +1,7 @@
 # Bitbucket Cloud build status notifier plugin for Jenkins - [![Build Status][jenkins-status]][jenkins-builds]
 
 Every time you trigger a build, you don't have to log in to your build server to see if it passed or failed. Now
-you will be able to know when your build is passing right within the Bitbucket UI.
+you will be able to know when your build is passing right within the Bitbucket Cloud UI.
 
 Note: This plugin aims at the Atlassian-hosted BitBucket Cloud solution, not BitBucket Server (formerly known as Stash).
 
@@ -77,12 +77,13 @@ Third, you need to add the Bitbucket OAuth Consumer credentials. You have two wa
 
 ### Configure Jenkins to notify Bitbucket from a standard build
 
-Once you have configured the credentials, configure jenkins to notify Bitbucket.
+Once you have configured the credentials, configure Jenkins to notify Bitbucket.
 
 1. Go to the Job you want notifies the builds to Bitbucket.
 2. Click **Configure**.
 3. Select **Bitbucket notify build status**.
 4. Choose whether you want to notify the build status on Jenkins to Bitbucket.
+5. Choose whether given a same scm revision you want to notify a new build status for every job build or to override the latest one.
 
 ### Pipeline step to notify Bitbucket
 
