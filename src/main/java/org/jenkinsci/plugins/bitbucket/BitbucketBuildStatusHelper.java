@@ -149,22 +149,22 @@ class BitbucketBuildStatusHelper {
 
     public static String defaultBitbucketBuildKeyFromBuild(Run<?, ?> build) {
         Job<?, ?> project = build.getParent();
-        return DigestUtils.md5Hex(project.getFullDisplayName() + "#" + build.getNumber());
+        return DigestUtils.md5Hex(project.getFullName() + "#" + build.getNumber());
     }
 
     public static String uniqueBitbucketBuildKeyFromBuild(Run<?, ?> build) {
         Job<?, ?> project = build.getParent();
-        return DigestUtils.md5Hex(project.getFullDisplayName());
+        return DigestUtils.md5Hex(project.getFullName());
     }
 
     public static String defaultBitbucketBuildNameFromBuild(Run<?, ?> build) {
         Job<?, ?> project = build.getParent();
-        return project.getFullDisplayName() + " #" + build.getNumber();
+        return project.getFullName() + " #" + build.getNumber();
     }
 
     public static String uniqueBitbucketBuildNameFromBuild(Run<?, ?> build) {
         Job<?, ?> project = build.getParent();
-        return project.getFullDisplayName();
+        return project.getFullName();
     }
 
     public static String defaultBitbucketBuildDescriptionFromBuild(Run<?, ?> build) {
