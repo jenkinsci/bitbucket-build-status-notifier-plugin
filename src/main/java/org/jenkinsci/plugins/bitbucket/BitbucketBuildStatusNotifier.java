@@ -159,7 +159,9 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         private String globalCredentialsId;
-        
+
+        private boolean globalErrorWhenFailed;
+
         public DescriptorImpl() {
             load();
         }
@@ -170,6 +172,12 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
         public void setGlobalCredentialsId(String globalCredentialsId) {
             this.globalCredentialsId = globalCredentialsId;
+        }
+
+        public boolean getGlobalErrorWhenFailed() { return globalErrorWhenFailed; }
+
+        public void setGlobalErrorWhenFailed(boolean globalErrorWhenFailed) {
+            this.globalErrorWhenFailed = globalErrorWhenFailed;
         }
 
         @Override
