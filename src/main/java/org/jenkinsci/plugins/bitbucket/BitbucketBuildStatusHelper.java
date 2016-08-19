@@ -104,16 +104,16 @@ class BitbucketBuildStatusHelper {
             );
 
             if (repoName.isEmpty()) {
-                logger.log(Level.INFO, "Bitbucket build notifier could not extract the repository name from the repository URL");
+                logger.log(Level.INFO, "Bitbucket build notifier could not extract the repository name from the repository URL: " + repoUrl);
                 continue;
             }
 
-            String userName = repoUrl.substring(0, repoUrl.indexOf("/" + repoName));
+            String userName = repoUrl.substring(0, repoUrl.lastIndexOf("/" + repoName));
             if (userName.contains("/")) {
                 userName = userName.substring(userName.indexOf("/") + 1, userName.length());
             }
             if (userName.isEmpty()) {
-                logger.log(Level.INFO, "Bitbucket build notifier could not extract the user name from the repository URL");
+                logger.log(Level.INFO, "Bitbucket build notifier could not extract the user name from the repository URL: " + repoUrl + " with repository name: " + repoName);
                 continue;
             }
 
