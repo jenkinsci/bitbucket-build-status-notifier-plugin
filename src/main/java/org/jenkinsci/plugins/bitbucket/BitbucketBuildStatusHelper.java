@@ -77,7 +77,7 @@ class BitbucketBuildStatusHelper {
         if (scm instanceof GitSCM) {
             scmAdapter = new GitScmAdapter((GitSCM) scm, build);
         } else if (scm instanceof MercurialSCM) {
-            scmAdapter = new MercurialScmAdapter((MercurialSCM) scm);
+            scmAdapter = new MercurialScmAdapter((MercurialSCM) scm, build);
         } else if (scm instanceof MultiSCM) {
             scmAdapter = new MultiScmAdapter((MultiSCM)scm, build);
         } else {

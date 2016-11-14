@@ -24,7 +24,9 @@
 
 package org.jenkinsci.plugins.bitbucket.scm;
 
+import hudson.model.Run;
 import hudson.plugins.mercurial.MercurialSCM;
+import hudson.plugins.mercurial.MercurialTagAction;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,9 +36,11 @@ import org.eclipse.jgit.transport.URIish;
 public class MercurialScmAdapter implements ScmAdapter {
 
     private final MercurialSCM hgSCM;
+    private final Run<?, ?> build;
 
-    public MercurialScmAdapter(MercurialSCM scm) {
+    public MercurialScmAdapter(MercurialSCM scm, Run<?, ?> build) {
         this.hgSCM = scm;
+        this.build = build;
     }
 
     public Map<String, URIish> getCommitRepoMap() throws Exception {
@@ -46,7 +50,8 @@ public class MercurialScmAdapter implements ScmAdapter {
         }
 
         HashMap<String, URIish> commitRepoMap = new HashMap<String, URIish>();
-        commitRepoMap.put(this.hgSCM.getRevision(), new URIish(this.hgSCM.getSource()));
+        MercurialTagAction action = build.getAction(MercurialTagAction.class);
+        commitRepoMap.put(action != null ? action.getId() : this.hgSCM.getRevision(), new URIish(this.hgSCM.getSource()));
 
         return commitRepoMap;
     }
