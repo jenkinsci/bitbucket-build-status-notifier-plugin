@@ -57,7 +57,7 @@ public class MultiScmAdapter implements ScmAdapter {
             if (scm instanceof GitSCM) {
                 commitRepoMap.putAll(new GitScmAdapter((GitSCM) scm, this.build).getCommitRepoMap());
             } else if (scm instanceof MercurialSCM) {
-                commitRepoMap.putAll(new MercurialScmAdapter((MercurialSCM) scm).getCommitRepoMap());
+                commitRepoMap.putAll(new MercurialScmAdapter((MercurialSCM) scm, this.build).getCommitRepoMap());
             }
         }
 
