@@ -83,6 +83,14 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
     private String buildState;
     public String getBuildState() { return this.buildState; }
 
+    
+    private boolean overrideLatestBuild;
+    public boolean isOverrideLatestBuild() { return this.overrideLatestBuild; }
+    @DataBoundSetter public void setOverrideLatestBuild(boolean overrideLatestBuild) {
+        this.overrideLatestBuild = overrideLatestBuild;
+
+}
+    
     @DataBoundConstructor
     public BitbucketBuildStatusNotifierStep(final String buildState) {
         this.credentialsId = credentialsId;
@@ -186,7 +194,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);
 
-            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), false, build, taskListener, buildStatus);
+            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), step.isOverrideLatestBuild(), build, taskListener, buildStatus);
 
             if(buildState.equals(BitbucketBuildStatus.FAILED)) {
                 throw new Exception(buildDescription);
