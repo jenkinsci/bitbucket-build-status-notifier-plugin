@@ -4,5 +4,8 @@
         <f:entry title="${%Global Credentials}" field="globalCredentialsId">
             <c:select />
         </f:entry>
+        <f:entry title="${%Throw Exception When Notifying FAILED Status}" field="globalErrorWhenFailed">
+            <f:checkbox default="true" />
+        </f:entry>
     </f:section>
 </j:jelly>

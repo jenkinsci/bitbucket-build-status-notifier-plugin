@@ -109,12 +109,20 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
 
         private String globalCredentialsId;
 
+        private boolean globalErrorWhenFailed;
+
         public String getGlobalCredentialsId() {
             return globalCredentialsId;
         }
 
         public void setGlobalCredentialsId(String globalCredentialsId) {
             this.globalCredentialsId = globalCredentialsId;
+        }
+
+        public boolean getGlobalErrorWhenFailed() { return globalErrorWhenFailed; }
+
+        public void setGlobalErrorWhenFailed(boolean globalErrorWhenFailed) {
+            this.globalErrorWhenFailed = globalErrorWhenFailed;
         }
 
         public DescriptorImpl() {
@@ -155,6 +163,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             try {
                 config.unmarshal(cfg);
                 step.getDescriptor().setGlobalCredentialsId(cfg.getGlobalCredentialsId());
+                step.getDescriptor().setGlobalErrorWhenFailed(cfg.getGlobalErrorWhenFailed());
             } catch(IOException e) {
                 logger.warning("Unable to read BitbucketBuildStatusNotifier configuration");
             }
@@ -188,7 +197,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
 
             BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), false, build, taskListener, buildStatus);
 
-            if(buildState.equals(BitbucketBuildStatus.FAILED)) {
+            if(step.getDescriptor().getGlobalErrorWhenFailed() && buildState.equals(BitbucketBuildStatus.FAILED)) {
                 throw new Exception(buildDescription);
             }
 
