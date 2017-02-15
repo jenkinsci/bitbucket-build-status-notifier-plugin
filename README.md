@@ -93,7 +93,6 @@ Once you have configured the credential, you can notify BitBucket from your Pipe
 
 The `bitbucketStatusNotify` step notifies the status of a build identified by a build key and build name to BitBucket.
 If `buildKey` and `buildName` parameters are not provided, a standard name will be assigned to the build (NameOfYourJob #numberOfBuild - eg. MyProject #32).
-When a `FAILED` status is sent to BitBucket, `bitbucketStatusNotify` throws an exception terminating your Pipeline.
 
 ```groovy
   ...
