@@ -204,5 +204,4 @@
       <url>https://repo.jenkins-ci.org/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
-</project>
-
+</project> 
