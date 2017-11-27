@@ -57,6 +57,7 @@ import org.jenkinsci.plugins.bitbucket.scm.MercurialScmAdapter;
 import org.jenkinsci.plugins.bitbucket.scm.MultiScmAdapter;
 import org.jenkinsci.plugins.bitbucket.scm.ScmAdapter;
 import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.scribe.model.*;
@@ -178,8 +179,7 @@ class BitbucketBuildStatusHelper {
     }
 
     public static String buildUrlFromBuild(Run<?, ?> build) {
-        Job<?, ?> project = build.getParent();
-        return project.getAbsoluteUrl() + build.getNumber() + '/';
+        return DisplayURLProvider.get().getRunURL(build);
     }
 
     private static BitbucketBuildStatus createBitbucketBuildStatusFromBuild(Run<?, ?> build, boolean overrideLatestBuild) throws Exception {
