@@ -96,6 +96,10 @@ class BitbucketBuildStatusHelper {
 
             // expand parameters on repo url
             String repoUrl = build.getEnvironment(new LogTaskListener(logger, Level.INFO)).expand(repoUri.getPath());
+            if (repoUrl.endsWith("/")) {
+                //fix JENKINS-49902
+                repoUrl = repoUrl.substring(0, repoUrl.length() - 1);
+            }
 
             // extract bitbucket user name and repository name from repo URI
             String repoName = repoUrl.substring(
