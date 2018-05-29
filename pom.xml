@@ -12,7 +12,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>bitbucket-build-status-notifier</artifactId>
-  <version>1.3.4-SNAPSHOT</version>
+  <version>1.4.0</version>
   <packaging>hpi</packaging>
 
   <properties>
@@ -46,7 +46,7 @@
     <connection>scm:git:git://github.com/jenkinsci/bitbucket-build-status-notifier-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/bitbucket-build-status-notifier-plugin.git</developerConnection>
     <url>http://github.com/jenkinsci/bitbucket-build-status-notifier-plugin</url>
-    <tag>HEAD</tag>
+    <tag>1.4.0</tag>
   </scm>
 
   <repositories>
