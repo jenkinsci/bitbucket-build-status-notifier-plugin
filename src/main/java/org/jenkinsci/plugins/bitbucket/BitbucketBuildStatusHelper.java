@@ -221,12 +221,12 @@ class BitbucketBuildStatusHelper {
 
     public static void notifyBuildStatus(UsernamePasswordCredentials credentials, boolean overrideLatestBuild,
                                          final Run<?, ?> build, final TaskListener listener) throws Exception {
-        notifyBuildStatus(credentials, overrideLatestBuild, build, listener, createBitbucketBuildStatusFromBuild(build, overrideLatestBuild));
+        notifyBuildStatus(credentials, overrideLatestBuild, build, listener, createBitbucketBuildStatusFromBuild(build, overrideLatestBuild), null, null);
     }
 
     public static void notifyBuildStatus(UsernamePasswordCredentials credentials, boolean overrideLatestBuild,
                                          final Run<?, ?> build, final TaskListener listener,
-                                         BitbucketBuildStatus buildStatus) throws Exception {
+                                         BitbucketBuildStatus buildStatus, String repoSlug, String commitId) throws Exception {
 
         List<BitbucketBuildStatusResource> buildStatusResources = createBuildStatusResources(build);
 
@@ -247,6 +247,10 @@ class BitbucketBuildStatusHelper {
 
                     break;
                 }
+            }
+
+            if(repoSlug != null && commitId != null) {
+                buildStatusResource = new BitbucketBuildStatusResource(buildStatusResource.getOwner(), repoSlug, commitId);
             }
 
             sendBuildStatusNotification(credentials, build, buildStatusResource, buildStatus, listener);
