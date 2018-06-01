@@ -191,6 +191,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-[jenkins-builds]: https://jenkins.ci.cloudbees.com/job/plugins/job/bitbucket-build-status-notifier-plugin/
-[jenkins-status]: https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/bitbucket-build-status-notifier-plugin
+[jenkins-builds]: https://ci.jenkins.io/job/plugins/job/bitbucket-build-status-notifier-plugin/job/master
+[jenkins-status]: https://ci.jenkins.io/buildStatus/icon?job=plugins/bitbucket-build-status-notifier-plugin/master
 [how-to-submit-issue]: https://wiki.jenkins-ci.org/display/JENKINS/How+to+report+an+issue
