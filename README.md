@@ -100,42 +100,54 @@ If `buildKey` and `buildName` parameters are not provided, a standard name will 
     bitbucketStatusNotify(
       buildState: 'INPROGRESS',
       buildKey: 'build',
-      buildName: 'Build'
+      buildName: 'Build',
+      repoSlug: 'my-awesome-project',
+      commitId: 'a83c709e9d514421ef614ef0a1117366c84c6304'      
     )
     try {
         myBuildFunction()
         bitbucketStatusNotify(
           buildState: 'SUCCESSFUL',
           buildKey: 'build',
-          buildName: 'Build'
+          buildName: 'Build',
+          repoSlug: 'my-awesome-project',
+          commitId: 'a83c709e9d514421ef614ef0a1117366c84c6304'          
         )
     } catch(Exception e) {
         bitbucketStatusNotify(
           buildState: 'FAILED',
           buildKey: 'build',
           buildName: 'Build',
-          buildDescription: 'Something went wrong with build!'
+          buildDescription: 'Something went wrong with build!',
+          repoSlug: 'my-awesome-project',
+          commitId: 'a83c709e9d514421ef614ef0a1117366c84c6304'      
         )
     }
   stage 'Test'
     bitbucketStatusNotify(
       buildState: 'INPROGRESS',
       buildKey: 'test',
-      buildName: 'Test'
+      buildName: 'Test',
+      repoSlug: 'my-awesome-project',
+      commitId: 'a83c709e9d514421ef614ef0a1117366c84c6304'
     )
     try {
         myTestFunction()
         bitbucketStatusNotify(
           buildState: 'SUCCESSFUL',
           buildKey: 'test',
-          buildName: 'Test'
+          buildName: 'Test',
+          repoSlug: 'my-awesome-project',
+          commitId: 'a83c709e9d514421ef614ef0a1117366c84c6304'
         )
     } catch(Exception e) {
         bitbucketStatusNotify(
           buildState: 'FAILED',
           buildKey: 'test',
           buildName: 'Test',
-          buildDescription: 'Something went wrong with tests!'
+          buildDescription: 'Something went wrong with tests!',
+          repoSlug: 'my-awesome-project',
+          commitId: 'a83c709e9d514421ef614ef0a1117366c84c6304'
         )
     }
   ...
@@ -151,6 +163,10 @@ Parameter:
 | `buildKey` | String | yes | The unique key identifying the current build phase
 | `buildName` | String | yes | The build phase's name shown on BitBucket
 | `buildDescription` | String | yes | The build phase's description shown on BitBucket
+| `repoSlug`| String | yes | The slug of the bitbucket repository to send the notification to
+| `commitId` | String | yes | The id of the commit to attach the status notification to 
+
+Note that the `repoSlug` and `commitId` parameters work only when they are both specified.
 
 ## Contributions
 
@@ -175,6 +191,6 @@ WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEM
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-[jenkins-builds]: https://jenkins.ci.cloudbees.com/job/plugins/job/bitbucket-build-status-notifier-plugin/
-[jenkins-status]: https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/bitbucket-build-status-notifier-plugin
+[jenkins-builds]: https://ci.jenkins.io/job/plugins/job/bitbucket-build-status-notifier-plugin/job/master
+[jenkins-status]: https://ci.jenkins.io/buildStatus/icon?job=plugins/bitbucket-build-status-notifier-plugin/master
 [how-to-submit-issue]: https://wiki.jenkins-ci.org/display/JENKINS/How+to+report+an+issue

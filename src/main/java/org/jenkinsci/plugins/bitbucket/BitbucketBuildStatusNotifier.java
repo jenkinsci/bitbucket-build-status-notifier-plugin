@@ -105,6 +105,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         }
         logger.info("Bitbucket notify on start");
 
+
         try {
             BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), this.getOverrideLatestBuild(), build, listener);
         } catch (Exception e) {

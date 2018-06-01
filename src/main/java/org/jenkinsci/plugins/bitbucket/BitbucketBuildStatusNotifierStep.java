@@ -83,6 +83,18 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
     private String buildState;
     public String getBuildState() { return this.buildState; }
 
+    private String repoSlug;
+    public String getRepoSlug() { return this.repoSlug; }
+    @DataBoundSetter public void setRepoSlug(String repoSlug) {
+        this.repoSlug = repoSlug;
+    }
+
+    private String commitId;
+    public String getCommitId() { return this.commitId; }
+    @DataBoundSetter public void setCommitId(String commitId) {
+        this.commitId = commitId;
+    }
+
     @DataBoundConstructor
     public BitbucketBuildStatusNotifierStep(final String buildState) {
         this.credentialsId = credentialsId;
@@ -181,12 +193,17 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
                 buildDescription = BitbucketBuildStatusHelper.defaultBitbucketBuildDescriptionFromBuild(build);
             }
 
+            String commitId = step.getCommitId();
+            String repoSlug = step.getRepoSlug();
+            logger.info("Got commit id " + commitId);
+            logger.info("Got repo slug = " + repoSlug);
+
             String buildUrl = BitbucketBuildStatusHelper.buildUrlFromBuild(build);
 
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);
 
-            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), false, build, taskListener, buildStatus);
+            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), false, build, taskListener, buildStatus, repoSlug, commitId);
 
             return null;
         }
