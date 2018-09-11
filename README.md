@@ -159,7 +159,7 @@ Parameter:
 
 | Name | Type | Optional | Description |
 | --- | --- | --- | --- |
-| `buildState` | `"INPROGRESS"|"SUCCESSFUL"|"FAILED"` | no | The status of the current build phase
+| `buildState` | `INPROGRESS`,`SUCCESSFUL`,`FAILED` | no | The status of the current build phase
 | `buildKey` | String | yes | The unique key identifying the current build phase
 | `buildName` | String | yes | The build phase's name shown on BitBucket
 | `buildDescription` | String | yes | The build phase's description shown on BitBucket
