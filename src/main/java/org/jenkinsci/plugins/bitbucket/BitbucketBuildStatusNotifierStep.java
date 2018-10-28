@@ -97,7 +97,6 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
 
     @DataBoundConstructor
     public BitbucketBuildStatusNotifierStep(final String buildState) {
-        this.credentialsId = credentialsId;
         this.buildState = buildState;
     }
 
