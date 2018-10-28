@@ -46,7 +46,7 @@ public class MultiScmAdapter implements ScmAdapter {
         this.build = build;
     }
 
-    public Map getCommitRepoMap() throws Exception {
+    public Map<String, URIish> getCommitRepoMap() throws Exception {
         HashMap<String, URIish> commitRepoMap = new HashMap<String, URIish>();
 
         for (SCM scm : multiScm.getConfiguredSCMs()) {
