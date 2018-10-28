@@ -54,10 +54,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
     private static final BitbucketHostValidator hostValidator = new BitbucketHostValidator();
 
     private String credentialsId;
-    public String getCredentialsId() {
-        return this.credentialsId;
-    }
-
+    public String getCredentialsId() { return this.credentialsId; }
     @DataBoundSetter public void setCredentialsId(String credentialsId) {
         this.credentialsId = credentialsId;
     }
@@ -166,7 +163,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             try {
                 config.unmarshal(cfg);
                 step.getDescriptor().setGlobalCredentialsId(cfg.getGlobalCredentialsId());
-            } catch(IOException e) {
+            } catch (IOException e) {
                 logger.warning("Unable to read BitbucketBuildStatusNotifier configuration");
             }
         }
@@ -178,17 +175,17 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             String buildState = step.getBuildState();
 
             String buildKey = step.getBuildKey();
-            if(buildKey == null) {
+            if (buildKey == null) {
                 buildKey = BitbucketBuildStatusHelper.defaultBitbucketBuildKeyFromBuild(build);
             }
 
             String buildName = step.getBuildName();
-            if(buildName == null) {
+            if (buildName == null) {
                 buildName = BitbucketBuildStatusHelper.defaultBitbucketBuildNameFromBuild(build);
             }
 
             String buildDescription = step.getBuildDescription();
-            if(buildDescription == null) {
+            if (buildDescription == null) {
                 buildDescription = BitbucketBuildStatusHelper.defaultBitbucketBuildDescriptionFromBuild(build);
             }
 

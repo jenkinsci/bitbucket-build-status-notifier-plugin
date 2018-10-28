@@ -99,7 +99,6 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     @Override
     public boolean prebuild(AbstractBuild<?, ?> build, BuildListener listener) {
-
         if (!this.notifyStart) {
             return true;
         }
@@ -120,7 +119,6 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-
         if (!this.notifyFinish) {
             return true;
         }
@@ -160,7 +158,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         private String globalCredentialsId;
-        
+
         public DescriptorImpl() {
             load();
         }
@@ -240,7 +238,6 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         }
 
         private FormValidation checkCredentials(UsernamePasswordCredentials credentials) {
-
             try {
                 OAuthConfig config = new OAuthConfig(credentials.getUsername(), credentials.getPassword().getPlainText());
                 BitbucketApiService apiService = (BitbucketApiService) new BitbucketApi().createService(config);

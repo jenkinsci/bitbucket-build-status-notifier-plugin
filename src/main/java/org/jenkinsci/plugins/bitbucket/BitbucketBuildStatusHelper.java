@@ -253,7 +253,7 @@ class BitbucketBuildStatusHelper {
                 }
             }
 
-            if(repoSlug != null && commitId != null) {
+            if (repoSlug != null && commitId != null) {
                 buildStatusResource = new BitbucketBuildStatusResource(buildStatusResource.getOwner(), repoSlug, commitId);
             }
 
