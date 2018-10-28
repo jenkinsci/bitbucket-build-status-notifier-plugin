@@ -56,10 +56,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     private static final Logger logger = Logger.getLogger(BitbucketBuildStatusNotifier.class.getName());
 
-    private boolean notifyStart;
-    private boolean notifyFinish;
-    private boolean overrideLatestBuild;
-    private String credentialsId;
+    private final boolean notifyStart;
+    private final boolean notifyFinish;
+    private final boolean overrideLatestBuild;
+    private final String credentialsId;
 
     @DataBoundConstructor
     public BitbucketBuildStatusNotifier(final boolean notifyStart, final boolean notifyFinish,

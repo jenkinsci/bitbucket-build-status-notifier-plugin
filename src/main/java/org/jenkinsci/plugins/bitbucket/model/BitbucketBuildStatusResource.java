@@ -30,9 +30,9 @@ public class BitbucketBuildStatusResource {
 
     private static final String API_ENDPOINT = "https://api.bitbucket.org/2.0/";
 
-    private String owner;
-    private String repoSlug;
-    private String commitId;
+    private final String owner;
+    private final String repoSlug;
+    private final String commitId;
 
     public BitbucketBuildStatusResource(String owner, String repoSlug, String commitId) {
         this.owner = owner;

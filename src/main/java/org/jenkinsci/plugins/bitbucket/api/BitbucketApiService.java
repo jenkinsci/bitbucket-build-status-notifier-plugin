@@ -34,8 +34,8 @@ public class BitbucketApiService extends OAuth20ServiceImpl {
     private static final String GRANT_TYPE_KEY = "grant_type";
     private static final String GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials";
 
-    private DefaultApi20 api;
-    private OAuthConfig config;
+    private final DefaultApi20 api;
+    private final OAuthConfig config;
 
     public BitbucketApiService(DefaultApi20 api, OAuthConfig config) {
         super(api, config);
