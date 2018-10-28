@@ -187,8 +187,8 @@ class BitbucketBuildStatusHelper {
     }
 
     private static BitbucketBuildStatus createBitbucketBuildStatusFromBuild(Run<?, ?> build, boolean overrideLatestBuild) throws Exception {
-        String buildKey = "";
-        String buildName = "";
+        String buildKey;
+        String buildName;
         String buildState = guessBitbucketBuildState(build.getResult());
         // bitbucket requires the key to be shorter than 40 chars
         if (overrideLatestBuild) {
