@@ -34,8 +34,6 @@ import org.eclipse.jgit.transport.URIish;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
 
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 public class MultiScmAdapter implements ScmAdapter {
@@ -48,12 +46,10 @@ public class MultiScmAdapter implements ScmAdapter {
         this.build = build;
     }
 
-    public Map getCommitRepoMap() throws Exception {
+    public Map<String, URIish> getCommitRepoMap() throws Exception {
         HashMap<String, URIish> commitRepoMap = new HashMap<String, URIish>();
-        List<SCM> scms = multiScm.getConfiguredSCMs();
 
-        for (Iterator<SCM> i = scms.iterator(); i.hasNext(); ) {
-            SCM scm = i.next();
+        for (SCM scm : multiScm.getConfiguredSCMs()) {
             if (scm instanceof GitSCM) {
                 commitRepoMap.putAll(new GitScmAdapter((GitSCM) scm, this.build).getCommitRepoMap());
             } else if (scm instanceof MercurialSCM) {
