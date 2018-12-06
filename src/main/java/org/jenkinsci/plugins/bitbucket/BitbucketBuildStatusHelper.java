@@ -245,8 +245,8 @@ class BitbucketBuildStatusHelper {
             // if previous build was manually aborted by the user and revision is the same than the current one
             // then update the bitbucket build status resource with current status and current build number
             for (BitbucketBuildStatusResource prevBuildStatusResource : prevBuildStatusResources) {
-                if (prevBuildStatusResource.getCommitId().equals(buildStatusResource.getCommitId())) {
-                    BitbucketBuildStatus prevBuildStatus = createBitbucketBuildStatusFromBuild(prevBuild, overrideLatestBuild);
+                if (prevBuildStatusResource.getCommitId().equals(buildStatusResource.getCommitId()) && overrideLatestBuild) {
+                    BitbucketBuildStatus prevBuildStatus = createBitbucketBuildStatusFromBuild(prevBuild, true);
                     buildStatus.setKey(prevBuildStatus.getKey());
 
                     break;
