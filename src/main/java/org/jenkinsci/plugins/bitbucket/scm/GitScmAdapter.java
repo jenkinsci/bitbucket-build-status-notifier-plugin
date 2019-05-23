@@ -49,8 +49,8 @@ public class GitScmAdapter implements ScmAdapter {
 
     public Map<String, URIish> getCommitRepoMap() throws Exception {
         List<RemoteConfig> repoList = this.gitScm.getRepositories();
-        if (repoList.size() != 1) {
-            throw new Exception("None or multiple repos");
+        if (repoList.size() < 1) {
+            throw new Exception("No repos found");
         }
 
         HashMap<String, URIish> commitRepoMap = new HashMap<String, URIish>();
