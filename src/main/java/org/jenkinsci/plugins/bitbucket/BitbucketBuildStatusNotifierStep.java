@@ -77,6 +77,12 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
         this.buildDescription = buildDescription;
     }
 
+    private String buildUrl;
+    public String getBuildUrl() { return this.buildUrl; }
+    @DataBoundSetter public void setBuildUrl(String buildUrl) {
+        this.buildUrl = buildUrl;
+    }
+
     private String buildState;
     public String getBuildState() { return this.buildState; }
 
@@ -194,7 +200,10 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             logger.info("Got commit id " + commitId);
             logger.info("Got repo slug = " + repoSlug);
 
-            String buildUrl = BitbucketBuildStatusHelper.buildUrlFromBuild(build);
+            String buildUrl = step.getBuildUrl();
+            if (buildUrl == null) {
+                buildUrl = BitbucketBuildStatusHelper.buildUrlFromBuild(build);
+            }
 
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);
