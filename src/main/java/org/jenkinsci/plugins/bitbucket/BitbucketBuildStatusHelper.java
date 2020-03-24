@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.eclipse.jgit.transport.URIish;
 
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.bitbucket.api.BitbucketApi;
 import org.jenkinsci.plugins.bitbucket.api.BitbucketApiService;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatus;
@@ -74,12 +75,14 @@ class BitbucketBuildStatusHelper {
             throw new Exception("Bitbucket build notifier only works with SCM");
         }
 
+        final Jenkins jenkins = Jenkins.getInstance();
+
         ScmAdapter scmAdapter;
         if (scm instanceof GitSCM) {
             scmAdapter = new GitScmAdapter((GitSCM) scm, build);
         } else if (scm instanceof MercurialSCM) {
             scmAdapter = new MercurialScmAdapter((MercurialSCM) scm, build);
-        } else if (scm instanceof MultiSCM) {
+        } else if (scm instanceof MultiSCM && jenkins != null && jenkins.getPlugin("multiple-scms") != null) {
             scmAdapter = new MultiScmAdapter((MultiSCM)scm, build);
         } else {
             throw new Exception("Bitbucket build notifier requires a git repo or a mercurial repo as SCM");
