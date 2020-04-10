@@ -59,7 +59,7 @@ import org.jenkinsci.plugins.bitbucket.scm.ScmAdapter;
 import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.scribe.model.*;
 
 class BitbucketBuildStatusHelper {
@@ -138,10 +138,9 @@ class BitbucketBuildStatusHelper {
         Job<?, ?> project = build.getParent();
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
-        if (project instanceof WorkflowJob) {
-            Collection<? extends SCM> scms = ((WorkflowJob)project).getSCMs();
-
-            for (SCM scm : scms) {
+        if (build instanceof WorkflowRun) {
+            WorkflowRun workflowRun = (WorkflowRun)build;
+            for (SCM scm : workflowRun.getSCMs()) {
                 buildStatusResources.addAll(createBuildStatusResources(scm, build));
             }
         } else if (project instanceof AbstractProject) {
