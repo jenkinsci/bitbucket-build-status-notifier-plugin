@@ -139,7 +139,8 @@ class BitbucketBuildStatusHelper {
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
         if (build instanceof WorkflowRun) {
-            for (SCM scm : ((WorkflowRun)build).getSCMs()) {
+            WorkflowRun workflowRun = (WorkflowRun)build;
+            for (SCM scm : workflowRun.getSCMs()) {
                 buildStatusResources.addAll(createBuildStatusResources(scm, build));
             }
         } else if (project instanceof AbstractProject) {
