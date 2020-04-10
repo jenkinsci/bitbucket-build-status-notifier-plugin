@@ -139,7 +139,11 @@ class BitbucketBuildStatusHelper {
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
         if (project instanceof WorkflowJob) {
-            Collection<? extends SCM> scms = ((WorkflowJob)project).getSCMs();
+            Map<String,SCM> scm_map = new LinkedHashMap<>();
+            for (WorkflowRun.SCMCheckout co : build.checkouts(null)) {
+                scm_map.put(co.scm.getKey(), co.scm);
+            }
+            Collection<? extends SCM> scms = scm_map.values();
 
             for (SCM scm : scms) {
                 buildStatusResources.addAll(createBuildStatusResources(scm, build));
