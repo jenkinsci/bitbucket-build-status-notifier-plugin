@@ -19,7 +19,7 @@
     <maven-hpi-plugin.version>1.112</maven-hpi-plugin.version>
     <maven-deploy-plugin.version>2.6</maven-deploy-plugin.version>
     <wagon-http.version>2.10</wagon-http.version>
-    <workflow.version>1.11</workflow.version>
+    <workflow.version>2.38</workflow.version>
   </properties>
 
   <name>Bitbucket Build Status Notifier Plugin</name>
