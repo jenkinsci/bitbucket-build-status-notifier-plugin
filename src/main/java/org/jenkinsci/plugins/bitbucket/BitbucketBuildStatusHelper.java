@@ -39,7 +39,6 @@ import hudson.util.LogTaskListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -140,13 +139,7 @@ class BitbucketBuildStatusHelper {
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
         if (build instanceof WorkflowRun) {
-            Map<String,SCM> scm_map = new LinkedHashMap<String,SCM>();
-            for (WorkflowRun.SCMCheckout co : (WorkflowRun)build.checkouts(null)) {
-                scm_map.put(co.scm.getKey(), co.scm);
-            }
-            Collection<? extends SCM> scms = scm_map.values();
-
-            for (SCM scm : scms) {
+            for (SCM scm : ((WorkflowRun)build).getSCMs()) {
                 buildStatusResources.addAll(createBuildStatusResources(scm, build));
             }
         } else if (project instanceof AbstractProject) {
