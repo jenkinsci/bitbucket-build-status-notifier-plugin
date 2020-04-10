@@ -140,7 +140,12 @@ class BitbucketBuildStatusHelper {
 
         if (build instanceof WorkflowRun) {
             WorkflowRun workflowRun = (WorkflowRun)build;
-            for (SCM scm : workflowRun.getSCMs()) {
+            List<SCMCheckout> scmCheckouts = workflowRun.checkouts(null);
+            List<SCM> scmList = new ArrayList<>();
+            for (SCMCheckout checkout : scmCheckouts) {
+                scmList.add(checkout.getScm());
+            }
+            for (SCM scm : scmList) {
                 buildStatusResources.addAll(createBuildStatusResources(scm, build));
             }
         } else if (project instanceof AbstractProject) {
