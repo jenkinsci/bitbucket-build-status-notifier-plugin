@@ -39,6 +39,7 @@ import hudson.util.LogTaskListener;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -59,7 +60,6 @@ import org.jenkinsci.plugins.bitbucket.scm.ScmAdapter;
 import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.multiplescms.MultiSCM;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.scribe.model.*;
 
@@ -139,9 +139,9 @@ class BitbucketBuildStatusHelper {
         Job<?, ?> project = build.getParent();
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
-        if (project instanceof WorkflowJob) {
+        if (build instanceof WorkflowRun) {
             Map<String,SCM> scm_map = new LinkedHashMap<String,SCM>();
-            for (WorkflowRun.SCMCheckout co : build.checkouts(null)) {
+            for (WorkflowRun.SCMCheckout co : (WorkflowRun)build.checkouts(null)) {
                 scm_map.put(co.scm.getKey(), co.scm);
             }
             Collection<? extends SCM> scms = scm_map.values();
