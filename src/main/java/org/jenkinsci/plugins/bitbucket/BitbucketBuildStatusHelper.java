@@ -54,11 +54,9 @@ import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusResource;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatusSerializer;
 import org.jenkinsci.plugins.bitbucket.scm.GitScmAdapter;
 import org.jenkinsci.plugins.bitbucket.scm.MercurialScmAdapter;
-import org.jenkinsci.plugins.bitbucket.scm.MultiScmAdapter;
 import org.jenkinsci.plugins.bitbucket.scm.ScmAdapter;
 import org.jenkinsci.plugins.bitbucket.validator.BitbucketHostValidator;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
-import org.jenkinsci.plugins.multiplescms.MultiSCM;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.scribe.model.*;
 
@@ -79,8 +77,6 @@ class BitbucketBuildStatusHelper {
             scmAdapter = new GitScmAdapter((GitSCM) scm, build);
         } else if (scm instanceof MercurialSCM) {
             scmAdapter = new MercurialScmAdapter((MercurialSCM) scm, build);
-        } else if (scm instanceof MultiSCM) {
-            scmAdapter = new MultiScmAdapter((MultiSCM)scm, build);
         } else {
             throw new Exception("Bitbucket build notifier requires a git repo or a mercurial repo as SCM");
         }
