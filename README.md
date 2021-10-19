@@ -164,6 +164,7 @@ Parameter:
 | `buildKey` | String | yes | The unique key identifying the current build phase
 | `buildName` | String | yes | The build phase's name shown on BitBucket
 | `buildDescription` | String | yes | The build phase's description shown on BitBucket
+| `buildUrl` | String | yes | The url linked to the phase in BitBucket. To link to a Jenkins artifact use `"${BUILD_URL}artifact/example.txt"`
 | `repoSlug`| String | yes | The slug of the bitbucket repository to send the notification to
 | `commitId` | String | yes | The id of the commit to attach the status notification to 
 
