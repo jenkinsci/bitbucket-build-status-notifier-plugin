@@ -165,7 +165,8 @@ Parameter:
 | `buildName` | String | yes | The build phase's name shown on BitBucket
 | `buildDescription` | String | yes | The build phase's description shown on BitBucket
 | `repoSlug`| String | yes | The slug of the bitbucket repository to send the notification to
-| `commitId` | String | yes | The id of the commit to attach the status notification to 
+| `commitId` | String | yes | The id of the commit to attach the status notification to
+| `overrideLatestBuild` | String | yes | If set to `true` will override the last build on Bitbucket (useful for requiring successful builds on pr merge). Defaults to false.
 
 Note that the `repoSlug` and `commitId` parameters work only when they are both specified.
 

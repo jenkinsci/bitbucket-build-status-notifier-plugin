@@ -92,6 +92,14 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
         this.commitId = commitId;
     }
 
+    private String overrideLatestBuild;
+    public Boolean getOverrideLatestBuildOrDefault() {
+        return Boolean.valueOf(this.overrideLatestBuild);
+    }
+    @DataBoundSetter public void setOverrideLatestBuild(String overrideLatestBuild) {
+        this.overrideLatestBuild = overrideLatestBuild;
+    }
+
     @DataBoundConstructor
     public BitbucketBuildStatusNotifierStep(final String buildState) {
         this.buildState = buildState;
@@ -199,7 +207,7 @@ public class BitbucketBuildStatusNotifierStep extends AbstractStepImpl {
             BitbucketBuildStatus buildStatus = new BitbucketBuildStatus(buildState, buildKey, buildUrl, buildName,
                     buildDescription);
 
-            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), false, build, taskListener, buildStatus, repoSlug, commitId);
+            BitbucketBuildStatusHelper.notifyBuildStatus(step.getCredentials(build), step.getOverrideLatestBuildOrDefault(), build, taskListener, buildStatus, repoSlug, commitId);
 
             return null;
         }
