@@ -39,11 +39,14 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.LogTaskListener;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.bitbucket.api.BitbucketApi;
 import org.jenkinsci.plugins.bitbucket.api.BitbucketApiService;
 import org.kohsuke.stapler.AncestorInPath;
@@ -60,15 +63,18 @@ public class BitbucketBuildStatusNotifier extends Notifier {
     private final boolean notifyFinish;
     private final boolean overrideLatestBuild;
     private final String credentialsId;
+    private final String overrideCommitIdVar;
 
     @DataBoundConstructor
     public BitbucketBuildStatusNotifier(final boolean notifyStart, final boolean notifyFinish,
-                                        final boolean overrideLatestBuild, final String credentialsId) {
+                                        final boolean overrideLatestBuild, final String credentialsId,
+                                        final String overrideCommitIdVar) {
         super();
         this.notifyStart = notifyStart;
         this.notifyFinish = notifyFinish;
         this.overrideLatestBuild = overrideLatestBuild;
         this.credentialsId = credentialsId;
+        this.overrideCommitIdVar = overrideCommitIdVar;
     }
 
     public boolean getNotifyStart() {
@@ -85,6 +91,10 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
     public String getCredentialsId() {
         return this.credentialsId != null ? this.credentialsId : this.getDescriptor().getGlobalCredentialsId();
+    }
+
+    public String getOverrideCommitIdVar() {
+        return overrideCommitIdVar;
     }
 
     private StandardUsernamePasswordCredentials getCredentials(AbstractBuild<?,?> build) {
@@ -106,7 +116,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
 
 
         try {
-            BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), this.getOverrideLatestBuild(), build, listener);
+            BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), this.getOverrideLatestBuild(), build, listener, getCommitId(build));
         } catch (Exception e) {
             listener.getLogger().println("Bitbucket notify on start failed: " + e.getMessage());
             e.printStackTrace(listener.getLogger());
@@ -125,7 +135,7 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         logger.info("Bitbucket notify on finish");
 
         try {
-            BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), this.getOverrideLatestBuild(), build, listener);
+            BitbucketBuildStatusHelper.notifyBuildStatus(this.getCredentials(build), this.getOverrideLatestBuild(), build, listener, getCommitId(build));
         } catch (Exception e) {
             logger.log(Level.INFO, "Bitbucket notify on finish failed: " + e.getMessage(), e);
             listener.getLogger().println("Bitbucket notify on finish failed: " + e.getMessage());
@@ -135,6 +145,23 @@ public class BitbucketBuildStatusNotifier extends Notifier {
         logger.info("Bitbucket notify on finish succeeded");
 
         return true;
+    }
+
+    private String getCommitId(AbstractBuild<?, ?> build) {
+        if (StringUtils.isBlank(overrideCommitIdVar)) {
+            return null;
+        } else {
+            try {
+                String commitId = build.getEnvironment(new LogTaskListener(logger, Level.INFO)).get(overrideCommitIdVar);
+                logger.info("Overriding commitId with " + commitId);
+                return commitId;
+            } catch (IOException e) {
+                logger.warning(e.getMessage());
+            } catch (InterruptedException e) {
+                logger.warning(e.getMessage());
+            }
+            return null;
+        }
     }
 
     @Override

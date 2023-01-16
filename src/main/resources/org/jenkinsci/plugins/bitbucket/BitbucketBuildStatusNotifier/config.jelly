@@ -14,4 +14,7 @@
             <c:select />
         </f:entry>
     </f:advanced>
+    <f:entry title="${%Override commit ID from environment variable}" field="overrideCommitIdVar">
+        <f:textbox />
+    </f:entry>
 </j:jelly>
