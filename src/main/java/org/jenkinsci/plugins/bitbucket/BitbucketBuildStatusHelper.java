@@ -46,7 +46,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.eclipse.jgit.transport.URIish;
-
 import org.jenkinsci.plugins.bitbucket.api.BitbucketApi;
 import org.jenkinsci.plugins.bitbucket.api.BitbucketApiService;
 import org.jenkinsci.plugins.bitbucket.model.BitbucketBuildStatus;
@@ -65,7 +64,7 @@ class BitbucketBuildStatusHelper {
     private static final BitbucketHostValidator hostValidator = new BitbucketHostValidator();
 
     private static List<BitbucketBuildStatusResource> createBuildStatusResources(final SCM scm,
-                                                                                 final Run<?, ?> build) throws Exception {
+                                                                                 final Run<?, ?> build, String commitId) throws Exception {
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
         if (scm == null) {
@@ -118,7 +117,9 @@ class BitbucketBuildStatusHelper {
                 continue;
             }
 
-            String commitId = commitRepoPair.getKey();
+            if (commitId == null) {
+                commitId = commitRepoPair.getKey();
+            }
             if (commitId == null) {
                 logger.log(Level.INFO, "Commit ID could not be found!");
                 continue;
@@ -130,7 +131,7 @@ class BitbucketBuildStatusHelper {
         return buildStatusResources;
     }
 
-    public static List<BitbucketBuildStatusResource> createBuildStatusResources(final Run<?, ?> build) throws Exception {
+    public static List<BitbucketBuildStatusResource> createBuildStatusResources(final Run<?, ?> build, String commitId) throws Exception {
         Job<?, ?> project = build.getParent();
         List<BitbucketBuildStatusResource> buildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
 
@@ -138,11 +139,11 @@ class BitbucketBuildStatusHelper {
             Collection<? extends SCM> scms = ((WorkflowJob)project).getSCMs();
 
             for (SCM scm : scms) {
-                buildStatusResources.addAll(createBuildStatusResources(scm, build));
+                buildStatusResources.addAll(createBuildStatusResources(scm, build, commitId));
             }
         } else if (project instanceof AbstractProject) {
             SCM scm = ((AbstractProject)project).getScm();
-            buildStatusResources = createBuildStatusResources(scm, build);
+            buildStatusResources = createBuildStatusResources(scm, build, commitId);
         }
 
         return buildStatusResources;
@@ -220,20 +221,20 @@ class BitbucketBuildStatusHelper {
     }
 
     public static void notifyBuildStatus(UsernamePasswordCredentials credentials, boolean overrideLatestBuild,
-                                         final Run<?, ?> build, final TaskListener listener) throws Exception {
-        notifyBuildStatus(credentials, overrideLatestBuild, build, listener, createBitbucketBuildStatusFromBuild(build, overrideLatestBuild), null, null);
+                                         final Run<?, ?> build, final TaskListener listener, String commitId) throws Exception {
+        notifyBuildStatus(credentials, overrideLatestBuild, build, listener, createBitbucketBuildStatusFromBuild(build, overrideLatestBuild), null, commitId);
     }
 
     public static void notifyBuildStatus(UsernamePasswordCredentials credentials, boolean overrideLatestBuild,
                                          final Run<?, ?> build, final TaskListener listener,
                                          BitbucketBuildStatus buildStatus, String repoSlug, String commitId) throws Exception {
 
-        List<BitbucketBuildStatusResource> buildStatusResources = createBuildStatusResources(build);
+        List<BitbucketBuildStatusResource> buildStatusResources = createBuildStatusResources(build, commitId);
 
         Run<?, ?> prevBuild = build.getPreviousBuild();
         List<BitbucketBuildStatusResource> prevBuildStatusResources = new ArrayList<BitbucketBuildStatusResource>();
         if (prevBuild != null && prevBuild.getResult() != null && prevBuild.getResult() == Result.ABORTED) {
-            prevBuildStatusResources = createBuildStatusResources(prevBuild);
+            prevBuildStatusResources = createBuildStatusResources(prevBuild, commitId);
         }
 
         for (BitbucketBuildStatusResource buildStatusResource : buildStatusResources) {
