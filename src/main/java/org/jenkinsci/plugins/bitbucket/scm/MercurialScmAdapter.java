@@ -35,23 +35,23 @@ import org.eclipse.jgit.transport.URIish;
 
 public class MercurialScmAdapter implements ScmAdapter {
 
-    private final MercurialSCM hgSCM;
-    private final Run<?, ?> build;
+    private final MercurialTagAction action;
+    private final String source;
+    private final String revision;
 
     public MercurialScmAdapter(MercurialSCM scm, Run<?, ?> build) {
-        this.hgSCM = scm;
-        this.build = build;
+        this.action = build.getAction(MercurialTagAction.class);
+        this.revision = scm.getRevision();
+        this.source = scm.getSource();
     }
 
     public Map<String, URIish> getCommitRepoMap() throws Exception {
-        String source = this.hgSCM.getSource();
         if (source == null || source.isEmpty()) {
             throw new Exception("None or multiple repos");
         }
 
         HashMap<String, URIish> commitRepoMap = new HashMap<String, URIish>();
-        MercurialTagAction action = build.getAction(MercurialTagAction.class);
-        commitRepoMap.put(action != null ? action.getId() : this.hgSCM.getRevision(), new URIish(this.hgSCM.getSource()));
+        commitRepoMap.put(action != null ? action.getId() : revision, new URIish(source));
 
         return commitRepoMap;
     }

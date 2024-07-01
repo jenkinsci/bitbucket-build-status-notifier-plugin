@@ -5,6 +5,16 @@ you will be able to know when your build is passing right within the Bitbucket C
 
 Note: This plugin aims at the Atlassian-hosted BitBucket Cloud solution, not BitBucket Server (formerly known as Stash).
 
+## Build plugin
+
+```
+docker run --rm -it \
+    -v maven-repo:/root/.m2 \
+    -v .:/usr/src/mymaven \
+    -w /usr/src/mymaven \
+    maven:latest mvn clean install
+```
+
 ## Features
 
 * Notify to Bitbucket for the following build events:

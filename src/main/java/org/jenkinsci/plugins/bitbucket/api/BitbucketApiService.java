@@ -28,6 +28,7 @@ import org.eclipse.jgit.util.Base64;
 import org.scribe.builder.api.DefaultApi20;
 import org.scribe.model.*;
 import org.scribe.oauth.OAuth20ServiceImpl;
+import java.nio.charset.StandardCharsets;
 
 public class BitbucketApiService extends OAuth20ServiceImpl {
 
@@ -60,8 +61,9 @@ public class BitbucketApiService extends OAuth20ServiceImpl {
 
     private String getHttpBasicAuthHeaderValue() {
         String authStr = config.getApiKey() + ":" + config.getApiSecret();
+        byte[] bin = authStr.getBytes(StandardCharsets.UTF_8);
 
-        return "Basic " + Base64.encodeBytes(authStr.getBytes());
+        return "Basic " + Base64.encodeBytes(bin);
     }
 
     private String getBearerAuthHeaderValue(Token token) {
