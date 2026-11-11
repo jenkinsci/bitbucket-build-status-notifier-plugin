@@ -149,6 +149,17 @@
   </dependencies>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <!-- The 1.609.1 parent leaves this unversioned, so Maven resolves a recent release
+             compiled for Java 11+ and the build fails on JDK 8. Pin the version the parent era used. -->
+        <plugin>
+          <groupId>org.kohsuke</groupId>
+          <artifactId>access-modifier-checker</artifactId>
+          <version>1.4</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.jenkins-ci.tools</groupId>
